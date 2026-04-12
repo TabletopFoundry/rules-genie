@@ -1,0 +1,33 @@
+import type { Metadata } from 'next';
+import { Inter, Space_Grotesk } from 'next/font/google';
+
+import '@/app/globals.css';
+import { SiteHeader } from '@/components/site-header';
+import '@/lib/db';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-heading' });
+
+export const metadata: Metadata = {
+  title: 'RulesGenie',
+  description: 'AI-powered board game rules assistant with citations, quick starts, and a personal dashboard.'
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en">
+      <body className={`${inter.variable} ${spaceGrotesk.variable} bg-board-canvas text-slate-900`}>
+        <div className="min-h-screen bg-grid">
+          <SiteHeader />
+          <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+          <footer className="border-t border-board-forest/10 bg-white/70">
+            <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+              <p>RulesGenie MVP · Built for fast mid-game rulings.</p>
+              <p>Demo mode works without API keys. Add OpenAI credentials for production-style answers.</p>
+            </div>
+          </footer>
+        </div>
+      </body>
+    </html>
+  );
+}

@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-board-canvas text-slate-900 antialiased;
+  background-image: radial-gradient(circle at top, rgba(244, 183, 64, 0.18), transparent 40%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  @apply transition-colors;
+}
+
+::selection {
+  background: rgba(29, 107, 85, 0.18);
+}
