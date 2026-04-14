@@ -1,88 +1,65 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { BookmarkToggle } from '@/components/bookmark-toggle';
-import { CitationList } from '@/components/citation-list';
-import { FeedbackControls } from '@/components/feedback-controls';
-import { StatusPill } from '@/components/status-pill';
-import type { GameRecord, QaRecord } from '@/types';
+import { ConversationThread } from '@/components/conversation-thread';
+import { useConversation } from '@/components/hooks/use-conversation';
+import { useRulesSession } from '@/components/hooks/use-rules-session';
+import { QuestionInput } from '@/components/question-input';
+import type { GameRecord } from '@/types';
 
-function makeSessionKey(gameId: string) {
-  return `rulesgenie-session:${gameId}`;
-}
-
-function createSessionId() {
-  if (typeof window !== 'undefined' && 'crypto' in window && 'randomUUID' in window.crypto) {
-    return window.crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-export function ChatInterface({ games, initialGameId }: { games: GameRecord[]; initialGameId?: string }) {
+export function ChatInterface({ games, initialGameId, initialQuestion }: { games: GameRecord[]; initialGameId?: string; initialQuestion?: string }) {
   const [selectedGameId, setSelectedGameId] = useState(initialGameId ?? games[0]?.id ?? '');
-  const [sessionId, setSessionId] = useState('');
-  const [history, setHistory] = useState<QaRecord[]>([]);
-  const [question, setQuestion] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [hydrating, setHydrating] = useState(true);
-  const [error, setError] = useState('');
+  const [question, setQuestion] = useState(initialQuestion ?? '');
 
   const selectedGame = useMemo(() => games.find((game) => game.id === selectedGameId) ?? games[0], [games, selectedGameId]);
 
+  const { sessionId, clearSession } = useRulesSession(selectedGameId);
+  const {
+    history,
+    loading,
+    hydrating,
+    error,
+    suggestions,
+    setSuggestions,
+    askQuestion,
+    resetConversation,
+    initialQuestionFired
+  } = useConversation(sessionId, selectedGameId);
+
+  const conversationEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when history changes or loading state changes
   useEffect(() => {
-    if (!selectedGameId) return;
-    const storageKey = makeSessionKey(selectedGameId);
-    const existing = window.localStorage.getItem(storageKey);
-    const nextSessionId = existing ?? createSessionId();
-    if (!existing) {
-      window.localStorage.setItem(storageKey, nextSessionId);
+    conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [history.length, loading]);
+
+  // Auto-submit initial question from ?q= param after session is ready
+  useEffect(() => {
+    if (initialQuestion && sessionId && !hydrating && !initialQuestionFired.current) {
+      initialQuestionFired.current = true;
+      void askQuestion(initialQuestion);
     }
-    setSessionId(nextSessionId);
-  }, [selectedGameId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuestion, sessionId, hydrating]);
 
-  useEffect(() => {
-    if (!sessionId || !selectedGameId) return;
-
-    setHydrating(true);
-    fetch(`/api/session?sessionId=${sessionId}&gameId=${selectedGameId}`)
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error('Could not load conversation history.');
-        }
-        return (await response.json()) as { items: QaRecord[] };
-      })
-      .then((payload) => setHistory(payload.items))
-      .catch((reason) => setError(reason instanceof Error ? reason.message : 'Could not load conversation history.'))
-      .finally(() => setHydrating(false));
-  }, [selectedGameId, sessionId]);
-
-  async function askQuestion(prefilledQuestion?: string) {
+  function handleAsk(prefilledQuestion?: string) {
     const prompt = (prefilledQuestion ?? question).trim();
     if (!prompt || !selectedGame || !sessionId) return;
+    void askQuestion(prompt);
+    setQuestion('');
+  }
 
-    setLoading(true);
-    setError('');
+  function handleClearSession() {
+    clearSession();
+    resetConversation();
+    setQuestion('');
+  }
 
-    try {
-      const response = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, gameId: selectedGame.id, question: prompt })
-      });
-
-      const payload = (await response.json()) as { item?: QaRecord; error?: string };
-      if (!response.ok || !payload.item) {
-        throw new Error(payload.error ?? 'RulesGenie could not answer right now.');
-      }
-
-      setHistory((current) => [...current, payload.item as QaRecord]);
-      setQuestion('');
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'RulesGenie could not answer right now.');
-    } finally {
-      setLoading(false);
-    }
+  function handleSuggestionClick(suggestion: string) {
+    setQuestion(suggestion);
+    setSuggestions([]);
+    void askQuestion(suggestion);
   }
 
   if (!selectedGame) {
@@ -102,7 +79,7 @@ export function ChatInterface({ games, initialGameId }: { games: GameRecord[]; i
           <select
             value={selectedGameId}
             onChange={(event) => setSelectedGameId(event.target.value)}
-            className="mt-2 w-full rounded-2xl border border-board-forest/10 px-4 py-3 text-sm text-slate-700 outline-none ring-board-gold transition focus:ring-2"
+            className="mt-2 w-full rounded-2xl border border-board-forest/10 px-4 py-3 text-sm text-slate-700 outline-none ring-board-gold transition focus-visible:ring-2"
           >
             {games.map((game) => (
               <option key={game.id} value={game.id}>
@@ -120,17 +97,25 @@ export function ChatInterface({ games, initialGameId }: { games: GameRecord[]; i
               <button
                 key={example}
                 type="button"
+                aria-label={`Ask: ${example}`}
                 onClick={() => {
                   setQuestion(example);
-                  void askQuestion(example);
+                  handleAsk(example);
                 }}
-                className="rounded-2xl border border-board-forest/10 bg-white px-3 py-3 text-left text-sm text-slate-600 transition hover:border-board-forest/30"
+                className="rounded-2xl border border-board-forest/10 bg-white px-3 py-3 text-left text-sm text-slate-600 transition hover:border-board-forest/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
               >
                 {example}
               </button>
             ))}
           </div>
         </div>
+        <button
+          type="button"
+          onClick={handleClearSession}
+          className="w-full rounded-2xl border border-board-forest/10 px-4 py-3 text-sm font-semibold text-board-pine transition hover:border-board-forest/30 hover:bg-board-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
+        >
+          New session
+        </button>
         <div className="rounded-2xl border border-board-forest/10 p-4 text-sm text-slate-600">
           <p className="font-semibold text-board-pine">Quick-start reminders</p>
           <ul className="mt-3 space-y-2">
@@ -152,62 +137,23 @@ export function ChatInterface({ games, initialGameId }: { games: GameRecord[]; i
           </div>
         </div>
 
-        <div className="mt-6 space-y-5">
-          {hydrating ? <p className="text-sm text-slate-500">Loading your conversation…</p> : null}
-          {!hydrating && !history.length ? (
-            <div className="rounded-[28px] border border-dashed border-board-forest/20 bg-board-canvas p-8 text-sm text-slate-600">
-              No questions yet. Start with one of the example prompts or type a rules dispute below.
-            </div>
-          ) : null}
-          {history.map((item) => (
-            <div key={item.id} className="space-y-4 rounded-[28px] border border-board-forest/10 p-5">
-              <div className="rounded-3xl bg-board-pine px-5 py-4 text-white">
-                <p className="text-xs uppercase tracking-[0.25em] text-white/70">Player asked</p>
-                <p className="mt-2 text-base font-semibold">{item.question}</p>
-              </div>
-              <div className="space-y-4 rounded-3xl bg-board-canvas px-5 py-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <StatusPill status={item.status} />
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Confidence {Math.round(item.confidence * 100)}%</p>
-                </div>
-                <p className="text-sm leading-7 text-slate-700">{item.answer}</p>
-                <CitationList citations={item.citations} />
-                {item.bookmarked !== undefined ? <BookmarkToggle qaPairId={item.id} initialActive={item.bookmarked} /> : null}
-                {item.feedbackRating !== undefined ? <FeedbackControls qaPair={item} /> : null}
-              </div>
-            </div>
-          ))}
-          {loading ? (
-            <div className="rounded-[28px] border border-board-forest/10 bg-board-canvas p-5 text-sm text-slate-600">
-              Searching the rules reference and drafting a concise ruling…
-            </div>
-          ) : null}
-          {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-        </div>
+        <ConversationThread
+          history={history}
+          hydrating={hydrating}
+          loading={loading}
+          error={error}
+          suggestions={suggestions}
+          onSuggestionClick={handleSuggestionClick}
+        />
+        <div ref={conversationEndRef} />
 
-        <div className="mt-6 rounded-[28px] border border-board-forest/10 bg-slate-50 p-4">
-          <label className="sr-only" htmlFor="rules-question">
-            Ask a rules question
-          </label>
-          <textarea
-            id="rules-question"
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            placeholder={`Ask a ${selectedGame.name} rules question…`}
-            className="min-h-[130px] w-full rounded-3xl border border-board-forest/10 bg-white px-4 py-4 text-sm text-slate-700 outline-none ring-board-gold transition focus:ring-2"
-          />
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-slate-500">Conversation history is remembered per game session on this device.</p>
-            <button
-              type="button"
-              onClick={() => void askQuestion()}
-              disabled={loading || !question.trim()}
-              className="rounded-full bg-board-pine px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-            >
-              {loading ? 'Answering…' : 'Ask RulesGenie'}
-            </button>
-          </div>
-        </div>
+        <QuestionInput
+          question={question}
+          setQuestion={setQuestion}
+          loading={loading}
+          gameName={selectedGame.name}
+          onSubmit={handleAsk}
+        />
       </section>
     </div>
   );

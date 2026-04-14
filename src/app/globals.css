@@ -23,6 +23,14 @@ a {
   @apply transition-colors;
 }
 
+/* Global focus-visible indicators for accessibility */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  @apply outline-none ring-2 ring-board-gold;
+}
+
 ::selection {
   background: rgba(29, 107, 85, 0.18);
 }

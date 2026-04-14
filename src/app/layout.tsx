@@ -3,7 +3,6 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 
 import '@/app/globals.css';
 import { SiteHeader } from '@/components/site-header';
-import '@/lib/db';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-heading' });
@@ -18,8 +17,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className={`${inter.variable} ${spaceGrotesk.variable} bg-board-canvas text-slate-900`}>
         <div className="min-h-screen bg-grid">
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-board-pine focus:px-6 focus:py-3 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
+          >
+            Skip to content
+          </a>
           <SiteHeader />
-          <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+          <main id="main-content" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
           <footer className="border-t border-board-forest/10 bg-white/70">
             <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
               <p>RulesGenie MVP · Built for fast mid-game rulings.</p>

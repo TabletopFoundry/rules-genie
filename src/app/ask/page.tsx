@@ -9,6 +9,7 @@ export default async function AskPage({
 }) {
   const params = (await searchParams) ?? {};
   const initialGameId = typeof params.game === 'string' ? params.game : undefined;
+  const initialQuestion = typeof params.q === 'string' ? params.q : undefined;
   const games = listGames();
 
   return (
@@ -18,7 +19,7 @@ export default async function AskPage({
         title="Ask a rules question and keep the game moving"
         description="Demo mode works out of the box. Add an OpenAI key later if you want production-style generation grounded in the same curated context."
       />
-      <ChatInterface games={games} initialGameId={initialGameId} />
+      <ChatInterface games={games} initialGameId={initialGameId} initialQuestion={initialQuestion} />
     </div>
   );
 }

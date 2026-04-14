@@ -13,7 +13,12 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const payload = await request.json();
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
+  }
   const parsed = schema.safeParse(payload);
 
   if (!parsed.success) {
@@ -39,10 +44,12 @@ export async function POST(request: Request) {
       mode: answer.mode
     });
 
-    return NextResponse.json({ item });
+    return NextResponse.json({ item, suggestions: answer.suggestions });
   } catch (error) {
+    // Log actual error server-side but never leak internal details to the client
+    console.error('[api/ask] Unexpected error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'RulesGenie could not answer right now.' },
+      { error: 'RulesGenie could not answer right now.' },
       { status: 500 }
     );
   }

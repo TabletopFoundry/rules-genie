@@ -12,6 +12,7 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [selectedGameId, setSelectedGameId] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [mutationError, setMutationError] = useState('');
 
   const addableGames = useMemo(
     () => games.filter((game) => !snapshot.collection.some((owned) => owned.id === game.id)),
@@ -19,44 +20,68 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
   );
 
   async function toggleCollection(gameId: string) {
-    const response = await fetch('/api/collection', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gameId })
-    });
+    setMutationError('');
+    try {
+      const response = await fetch('/api/collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId })
+      });
 
-    if (!response.ok) return;
+      if (!response.ok) {
+        throw new Error('Could not update your collection. Please try again.');
+      }
 
-    const payload = (await response.json()) as { active: boolean };
-    const game = games.find((item) => item.id === gameId);
-    if (!game) return;
+      const payload = (await response.json()) as { active: boolean };
+      const game = games.find((item) => item.id === gameId);
+      if (!game) return;
 
-    setSnapshot((current) => ({
-      ...current,
-      collection: payload.active
-        ? [...current.collection, game].sort((a, b) => a.name.localeCompare(b.name))
-        : current.collection.filter((item) => item.id !== gameId)
-    }));
+      setSnapshot((current) => ({
+        ...current,
+        collection: payload.active
+          ? [...current.collection, game].sort((a, b) => a.name.localeCompare(b.name))
+          : current.collection.filter((item) => item.id !== gameId)
+      }));
+    } catch (err) {
+      setMutationError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    }
   }
 
   async function removeBookmark(qaPairId: string) {
-    const response = await fetch('/api/bookmarks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ qaPairId })
-    });
+    setMutationError('');
+    try {
+      const response = await fetch('/api/bookmarks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qaPairId })
+      });
 
-    if (!response.ok) return;
+      if (!response.ok) {
+        throw new Error('Could not remove bookmark. Please try again.');
+      }
 
-    setSnapshot((current) => ({
-      ...current,
-      bookmarks: current.bookmarks.filter((item) => item.id !== qaPairId),
-      recentQuestions: current.recentQuestions.map((item) => (item.id === qaPairId ? { ...item, bookmarked: false } : item))
-    }));
+      setSnapshot((current) => ({
+        ...current,
+        bookmarks: current.bookmarks.filter((item) => item.id !== qaPairId),
+        recentQuestions: current.recentQuestions.map((item) => (item.id === qaPairId ? { ...item, bookmarked: false } : item))
+      }));
+    } catch (err) {
+      setMutationError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    }
   }
 
   return (
     <div className="space-y-8">
+      {mutationError ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+          <div className="flex items-center justify-between gap-3">
+            <p>{mutationError}</p>
+            <button type="button" onClick={() => setMutationError('')} className="text-xs font-semibold text-rose-500 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold rounded">
+              Dismiss
+            </button>
+          </div>
+        </div>
+      ) : null}
       <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <div className="rounded-[32px] border border-board-forest/10 bg-white p-6 shadow-card">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-board-forest">Mock auth</p>
@@ -107,7 +132,7 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
                 await toggleCollection(selectedGameId);
                 setSelectedGameId('');
               })}
-              className="rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-board-pine/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
             >
               {isPending ? 'Saving…' : 'Add game'}
             </button>
@@ -120,10 +145,10 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
               <h4 className="mt-2 text-xl font-bold text-board-pine">{game.name}</h4>
               <p className="mt-2 text-sm text-slate-600">{game.tagline}</p>
               <div className="mt-4 flex flex-wrap gap-3">
-                <Link href={`/ask?game=${game.id}`} className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-board-pine">
+                <Link href={`/ask?game=${game.id}`} className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-board-pine transition hover:bg-board-mist focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2">
                   Open assistant
                 </Link>
-                <button type="button" onClick={() => startTransition(() => toggleCollection(game.id))} className="rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-slate-600">
+                <button type="button" onClick={() => startTransition(() => toggleCollection(game.id))} className="rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-board-mist hover:text-board-pine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2">
                   Remove
                 </button>
               </div>
@@ -149,7 +174,7 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
                   <p className="mt-2 text-sm text-slate-600">{item.answer}</p>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <StatusPill status={item.status} />
-                    <Link href={`/ask?game=${item.gameId}`} className="text-sm font-semibold text-board-forest">
+                    <Link href={`/ask?game=${item.gameId}`} className="text-sm font-semibold text-board-forest transition hover:text-board-pine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:rounded">
                       Continue asking →
                     </Link>
                   </div>
@@ -169,7 +194,7 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
                 <div key={item.id} className="rounded-2xl border border-board-forest/10 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="text-sm font-semibold text-board-forest">{game?.name ?? 'Supported game'}</p>
-                    <button type="button" onClick={() => startTransition(() => removeBookmark(item.id))} className="text-xs font-semibold text-slate-500">
+                    <button type="button" onClick={() => startTransition(() => removeBookmark(item.id))} className="text-xs font-semibold text-slate-500 transition hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:rounded">
                       Remove
                     </button>
                   </div>

@@ -94,7 +94,7 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
         <h3 className="text-xl font-bold text-board-pine">Example rules questions</h3>
         <div className="mt-4 flex flex-wrap gap-3">
           {game.exampleQuestions.map((item) => (
-            <Link key={item} href={`/ask?game=${game.id}`} className="rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-board-pine">
+            <Link key={item} href={`/ask?game=${game.id}&q=${encodeURIComponent(item)}`} className="rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-board-pine transition hover:bg-board-mist focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold">
               {item}
             </Link>
           ))}

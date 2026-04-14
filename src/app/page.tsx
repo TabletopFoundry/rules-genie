@@ -4,10 +4,11 @@ import { BookOpen, LibraryBig, MessageCircleQuestion, Sparkles } from 'lucide-re
 import { FeatureCard } from '@/components/feature-card';
 import { GameCard } from '@/components/game-card';
 import { SectionHeading } from '@/components/section-heading';
-import { getCollectionGameIds, getFeaturedGames } from '@/lib/db';
+import { getCollectionGameIds, getFeaturedGames, listGames } from '@/lib/db';
 
 export default function HomePage() {
   const featuredGames = getFeaturedGames();
+  const allGames = listGames();
   const collectionIds = Array.from(getCollectionGameIds());
 
   return (
@@ -24,17 +25,17 @@ export default function HomePage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-4">
-            <Link href="/ask" className="inline-flex rounded-full bg-board-pine px-6 py-3 text-sm font-semibold text-white">
+            <Link href="/ask" className="inline-flex rounded-full bg-board-pine px-6 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90 active:scale-[0.98]">
               Try the assistant
             </Link>
-            <Link href="/games" className="inline-flex rounded-full border border-board-forest/15 px-6 py-3 text-sm font-semibold text-board-pine">
+            <Link href="/games" className="inline-flex rounded-full border border-board-forest/15 px-6 py-3 text-sm font-semibold text-board-pine transition hover:bg-board-mist active:scale-[0.98]">
               Browse supported games
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-3xl bg-board-canvas p-4">
               <p className="text-sm text-slate-500">Supported games</p>
-              <p className="mt-2 text-3xl font-black text-board-pine">20</p>
+              <p className="mt-2 text-3xl font-black text-board-pine">{allGames.length}</p>
             </div>
             <div className="rounded-3xl bg-board-canvas p-4">
               <p className="text-sm text-slate-500">Works without keys</p>

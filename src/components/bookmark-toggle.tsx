@@ -8,19 +8,27 @@ import { cn } from '@/lib/utils';
 export function BookmarkToggle({ qaPairId, initialActive = false }: { qaPairId: string; initialActive?: boolean }) {
   const [active, setActive] = useState(initialActive);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState('');
 
   return (
+    <div className="inline-flex flex-col items-start gap-1">
     <button
       type="button"
       onClick={() => {
+        setError('');
         startTransition(async () => {
-          const response = await fetch('/api/bookmarks', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ qaPairId })
-          });
-          const payload = (await response.json()) as { active: boolean };
-          setActive(payload.active);
+          try {
+            const response = await fetch('/api/bookmarks', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ qaPairId })
+            });
+            if (!response.ok) throw new Error('Could not save bookmark.');
+            const payload = (await response.json()) as { active: boolean };
+            setActive(payload.active);
+          } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not save bookmark.');
+          }
         });
       }}
       className={cn(
@@ -28,9 +36,12 @@ export function BookmarkToggle({ qaPairId, initialActive = false }: { qaPairId: 
         active ? 'border-board-gold bg-board-gold/20 text-board-pine' : 'border-board-forest/15 bg-white text-slate-600'
       )}
       disabled={isPending}
+      aria-pressed={active}
     >
       <Bookmark className={cn('h-4 w-4', active && 'fill-current')} />
       {isPending ? 'Saving…' : active ? 'Saved' : 'Save answer'}
     </button>
+    {error && <p className="text-xs text-rose-600" role="alert">{error}</p>}
+    </div>
   );
 }

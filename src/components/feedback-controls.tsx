@@ -11,18 +11,23 @@ export function FeedbackControls({ qaPair }: { qaPair: QaRecord }) {
   const [rating, setRating] = useState<QaRecord['feedbackRating']>(qaPair.feedbackRating ?? null);
   const [reason, setReason] = useState(qaPair.feedbackReason ?? '');
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState('');
 
   async function submit(nextRating: 'up' | 'down', nextReason?: string) {
-    const response = await fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: qaPair.sessionId, qaPairId: qaPair.id, rating: nextRating, reason: nextReason })
-    });
-    if (response.ok) {
+    setError('');
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: qaPair.sessionId, qaPairId: qaPair.id, rating: nextRating, reason: nextReason })
+      });
+      if (!response.ok) throw new Error('Could not save feedback.');
       setRating(nextRating);
       if (nextReason !== undefined) {
         setReason(nextReason);
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save feedback.');
     }
   }
 
@@ -34,6 +39,7 @@ export function FeedbackControls({ qaPair }: { qaPair: QaRecord }) {
           onClick={() => startTransition(() => submit('up'))}
           className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 ${rating === 'up' ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-board-forest/15 bg-white text-slate-600'}`}
           disabled={isPending}
+          aria-pressed={rating === 'up'}
         >
           <ThumbsUp className="h-4 w-4" /> Helpful
         </button>
@@ -42,6 +48,7 @@ export function FeedbackControls({ qaPair }: { qaPair: QaRecord }) {
           onClick={() => startTransition(() => submit('down', reason || reasons[0]))}
           className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 ${rating === 'down' ? 'border-rose-500 bg-rose-50 text-rose-800' : 'border-board-forest/15 bg-white text-slate-600'}`}
           disabled={isPending}
+          aria-pressed={rating === 'down'}
         >
           <ThumbsDown className="h-4 w-4" /> Needs work
         </button>
@@ -67,6 +74,7 @@ export function FeedbackControls({ qaPair }: { qaPair: QaRecord }) {
           ))}
         </select>
       </label>
+      {error && <p className="text-xs text-rose-600" role="alert">{error}</p>}
     </div>
   );
 }

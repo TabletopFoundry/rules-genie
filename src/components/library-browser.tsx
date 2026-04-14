@@ -34,15 +34,16 @@ export function LibraryBrowser({ games, initialCollectionIds }: { games: GameRec
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search by game, mechanic, or vibe"
+          aria-label="Search games by name, mechanic, or theme"
           className="rounded-2xl border border-board-forest/10 px-4 py-3 text-sm outline-none ring-board-gold transition focus:ring-2"
         />
-        <select value={complexity} onChange={(event) => setComplexity(event.target.value)} className="rounded-2xl border border-board-forest/10 px-4 py-3 text-sm outline-none ring-board-gold transition focus:ring-2">
+        <select value={complexity} onChange={(event) => setComplexity(event.target.value)} aria-label="Filter by complexity" className="rounded-2xl border border-board-forest/10 px-4 py-3 text-sm outline-none ring-board-gold transition focus:ring-2">
           <option value="all">All complexity levels</option>
           <option value="easy">Gateway</option>
           <option value="mid">Midweight</option>
           <option value="heavy">Strategy-heavy</option>
         </select>
-        <select value={players} onChange={(event) => setPlayers(event.target.value)} className="rounded-2xl border border-board-forest/10 px-4 py-3 text-sm outline-none ring-board-gold transition focus:ring-2">
+        <select value={players} onChange={(event) => setPlayers(event.target.value)} aria-label="Filter by player count" className="rounded-2xl border border-board-forest/10 px-4 py-3 text-sm outline-none ring-board-gold transition focus:ring-2">
           <option value="all">Any player count</option>
           <option value="solo">Soloable</option>
           <option value="two">Works at 2</option>
