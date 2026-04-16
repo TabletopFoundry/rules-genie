@@ -25,5 +25,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid feedback payload.' }, { status: 400 });
   }
 
-  return NextResponse.json(saveFeedback(parsed.data));
+  try {
+    return NextResponse.json(saveFeedback(parsed.data));
+  } catch {
+    return NextResponse.json({ error: 'Failed to save feedback.' }, { status: 500 });
+  }
 }

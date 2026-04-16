@@ -6,3 +6,18 @@ data/*.db
 *.db-wal
 .env
 .env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+tsconfig.tsbuildinfo
+next-env.d.ts

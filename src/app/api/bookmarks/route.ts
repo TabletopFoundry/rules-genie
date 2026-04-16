@@ -20,5 +20,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing qaPairId.' }, { status: 400 });
   }
 
-  return NextResponse.json(toggleBookmark(parsed.data.qaPairId));
+  try {
+    return NextResponse.json(toggleBookmark(parsed.data.qaPairId));
+  } catch {
+    return NextResponse.json({ error: 'Failed to toggle bookmark.' }, { status: 500 });
+  }
 }

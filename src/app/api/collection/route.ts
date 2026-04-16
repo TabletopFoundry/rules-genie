@@ -20,5 +20,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing gameId.' }, { status: 400 });
   }
 
-  return NextResponse.json(toggleCollection(parsed.data.gameId));
+  try {
+    return NextResponse.json(toggleCollection(parsed.data.gameId));
+  } catch {
+    return NextResponse.json({ error: 'Failed to update collection.' }, { status: 500 });
+  }
 }

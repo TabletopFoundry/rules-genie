@@ -1,66 +1,141 @@
-# RulesGenie MVP
+# RulesGenie 🎲✨
 
-RulesGenie is an AI-powered board game rules assistant built with Next.js, Tailwind CSS, SQLite, and optional OpenAI integration.
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb?logo=react)](https://react.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
-## Features
+> **Stop flipping through rulebooks. Get the ruling in seconds.**
 
-- Landing page with product overview and clear CTAs
-- Rules Q&A interface with session history, citations, and feedback controls
-- Searchable game library with 20 supported popular board games
-- Quick-start mode with condensed summaries and setup guides
-- Mock-auth dashboard for collections, recent questions, and saved answers
-- Demo mode that works without any API keys
+RulesGenie is an AI-powered board game rules assistant that answers natural-language questions with citation-backed answers. It supports 20 popular board games out of the box, works entirely in demo mode without any API keys, and optionally integrates with OpenAI for production-grade responses.
 
-## Tech Stack
+---
 
-- Next.js 15 App Router + TypeScript
-- Tailwind CSS
-- SQLite via `better-sqlite3`
-- OpenAI API (optional)
+## ✨ Features
 
-## Getting Started
+- 🤖 **Rules Q&A** — Chat-style answers with game-aware session memory and source citations
+- 📚 **Game Library** — Search and filter a curated catalog of popular board games
+- ⚡ **Quick-Start Mode** — Compressed rules summaries and setup guides for faster teaches
+- 🔖 **Saved Answers** — Bookmark answers and revisit them on your personal dashboard
+- 🎯 **Demo Mode** — Works fully without API keys using intelligent keyword-scored mock responses
+- 🛡️ **Confidence Scoring** — Every answer includes a confidence level and citation status
 
-1. Install dependencies:
+## 🏗️ Architecture
 
-   ```bash
-   npm install
-   ```
+```
+┌─────────────────────────────────────────────────┐
+│                   Next.js App Router             │
+│  ┌──────────┐  ┌──────────┐  ┌───────────────┐  │
+│  │  Pages   │  │   API    │  │  Middleware    │  │
+│  │ (RSC +   │  │  Routes  │  │ (CSRF guard)  │  │
+│  │  Client) │  │          │  │               │  │
+│  └────┬─────┘  └────┬─────┘  └───────────────┘  │
+│       │              │                            │
+│  ┌────┴──────────────┴─────┐                      │
+│  │        src/lib/         │                      │
+│  │  ┌─────┐   ┌────────┐  │                      │
+│  │  │ AI  │   │   DB   │  │                      │
+│  │  │mock │   │ SQLite │  │                      │
+│  │  │+GPT │   │(better │  │                      │
+│  │  │     │   │sqlite3)│  │                      │
+│  │  └─────┘   └────────┘  │                      │
+│  └─────────────────────────┘                      │
+└─────────────────────────────────────────────────┘
+```
 
-2. (Optional) Copy the example environment file:
+## 🚀 Quick Start
 
-   ```bash
-   cp .env.example .env
-   ```
+Get running in under 2 minutes:
 
-3. Start the development server:
+```bash
+# 1. Clone and install
+git clone <repo-url> && cd rulesgenie
+npm install
 
-   ```bash
-   npm run dev
-   ```
+# 2. (Optional) Configure environment
+cp .env.example .env
 
-4. Open [http://localhost:3000](http://localhost:3000).
+# 3. Start development server
+npm run dev
+```
 
-## Environment Variables
+Open [http://localhost:3000](http://localhost:3000) — the app works immediately in demo mode.
 
-- `RULESGENIE_DEMO_MODE=true` keeps the app in mock mode.
-- `OPENAI_API_KEY` enables live OpenAI responses.
-- `OPENAI_MODEL` overrides the default model (`gpt-4o-mini`).
+> **💡 Tip:** Try asking _"Can I draw a face-up locomotive first?"_ on the Ask page to see citations and confidence scoring in action.
 
-If no API key is present, the app automatically falls back to demo mode.
+## ⚙️ Environment Variables
 
-## Persistence
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RULESGENIE_DEMO_MODE` | `true` | Keep the app in mock mode with scripted answers |
+| `OPENAI_API_KEY` | — | Your OpenAI API key for live AI responses |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Override the default OpenAI model |
 
-The app creates a local `rulesgenie.db` SQLite file in the project root. It stores:
+If no API key is present, the app automatically falls back to demo mode. No configuration required to get started.
 
-- supported game metadata
-- mock user dashboard data
-- chat history by session
-- saved answers/bookmarks
-- answer feedback
+## 🗄️ Persistence
 
-## Scripts
+The app creates a local `rulesgenie.db` SQLite file in the project root (auto-generated, git-ignored). It stores:
 
-- `npm run dev` — start the local development server
-- `npm run build` — create a production build
-- `npm run start` — run the production server
-- `npm run lint` — run Next.js linting
+- Supported game metadata (20 games, seeded on first run)
+- Mock user dashboard data
+- Chat history by session
+- Saved answers / bookmarks
+- Answer feedback (thumbs up/down)
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                  # Next.js App Router pages & API routes
+│   ├── api/              # REST endpoints (ask, bookmarks, collection, feedback, session)
+│   ├── ask/              # Rules Q&A chat page
+│   ├── dashboard/        # Personal dashboard
+│   ├── games/            # Game library + detail pages
+│   └── quick-start/      # Quick-start explorer
+├── components/           # React components (client + server)
+│   └── hooks/            # Custom React hooks (useConversation, useRulesSession)
+├── data/                 # Static game data and mock Q&A entries
+├── lib/                  # Core business logic
+│   ├── ai/               # AI engine (mock + OpenAI)
+│   └── db/               # Database layer (SQLite via better-sqlite3)
+└── types/                # TypeScript type definitions
+```
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | [Next.js 15](https://nextjs.org/) (App Router) |
+| Language | [TypeScript 5.8](https://www.typescriptlang.org/) (strict mode) |
+| UI | [React 19](https://react.dev/) + [Tailwind CSS 3](https://tailwindcss.com/) |
+| Database | [SQLite](https://sqlite.org/) via [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3) |
+| AI | [OpenAI API](https://platform.openai.com/) (optional) |
+| Validation | [Zod](https://zod.dev/) on all API routes |
+| Icons | [Lucide React](https://lucide.dev/) |
+
+## 📜 Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start the development server |
+| `npm run build` | Create a production build |
+| `npm run start` | Run the production server |
+| `npm run lint` | Run ESLint |
+| `npm run format` | Format code with Prettier |
+| `npm run format:check` | Check formatting without modifying files |
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) for details on how to get started.
+
+## 📄 License
+
+This project is licensed under the MIT License — see the [LICENSE](./LICENSE) file for details.
+
+---
+
+<p align="center">
+  <strong>RulesGenie</strong> · Built for fast mid-game rulings 🎲
+</p>
