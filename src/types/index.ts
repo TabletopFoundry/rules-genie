@@ -30,7 +30,7 @@ export type GameRecord = {
 
 export type MockQa = {
   id: string;
-  gameId: string;
+  gameId: string | null;
   questionPatterns: string[];
   keywords: string[];
   answer: string;
@@ -46,7 +46,7 @@ export type AiAnswer = {
   confidence: number;
   status: AiStatus;
   suggestions: string[];
-  mode: 'demo' | 'openai';
+  mode: 'demo' | 'openai' | 'fallback';
 };
 
 export type QaRecord = {
@@ -59,7 +59,7 @@ export type QaRecord = {
   citations: Citation[];
   confidence: number;
   status: AiStatus;
-  mode: 'demo' | 'openai';
+  mode: 'demo' | 'openai' | 'fallback';
   createdAt: string;
   bookmarked: boolean;
   feedbackRating?: 'up' | 'down' | null;

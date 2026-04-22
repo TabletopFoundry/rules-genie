@@ -1,6 +1,15 @@
+import type { Metadata } from 'next';
+
 import { QuickStartExplorer } from '@/components/quick-start-explorer';
 import { SectionHeading } from '@/components/section-heading';
 import { listGames } from '@/lib/db';
+
+export const metadata: Metadata = {
+  title: 'Quick Start — RulesGenie',
+  description: 'Compressed rules summaries and step-by-step setup guides for faster board game teaches.',
+  openGraph: { title: 'Quick Start — RulesGenie', description: 'Teach the game faster with condensed rules summaries.' },
+  twitter: { card: 'summary', title: 'Quick Start — RulesGenie', description: 'Teach the game faster with condensed rules summaries.' }
+};
 
 export default async function QuickStartPage({
   searchParams

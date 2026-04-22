@@ -2,7 +2,7 @@
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <div className="grid min-h-[60vh] place-items-center">
+    <div className="grid min-h-[60vh] place-items-center" role="alert" aria-live="assertive">
       <div className="max-w-lg rounded-[32px] border border-rose-200 bg-white px-8 py-10 text-center shadow-card">
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-rose-500">Unexpected error</p>
         <h1 className="mt-3 text-3xl font-bold text-board-pine">RulesGenie hit a snag.</h1>

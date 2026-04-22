@@ -56,6 +56,7 @@ export function FeedbackControls({ qaPair }: { qaPair: QaRecord }) {
       <label className="block text-xs text-slate-500">
         If it missed the mark, pick a reason.
         <select
+          aria-label="Feedback reason"
           value={reason}
           onChange={(event) => {
             const nextReason = event.target.value;

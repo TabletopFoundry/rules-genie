@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import { GameCard } from '@/components/game-card';
+import { COMPLEXITY_GATEWAY_MAX, COMPLEXITY_MIDWEIGHT_MAX } from '@/lib/utils';
 import type { GameRecord } from '@/types';
 
 export function LibraryBrowser({ games, initialCollectionIds }: { games: GameRecord[]; initialCollectionIds: string[] }) {
@@ -12,12 +13,12 @@ export function LibraryBrowser({ games, initialCollectionIds }: { games: GameRec
 
   const filteredGames = useMemo(() => {
     return games.filter((game) => {
-      const matchesSearch = `${game.name} ${game.description} ${game.category}`.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = `${game.name} ${game.description} ${game.category} ${game.mechanics.join(' ')} ${game.highlights.join(' ')}`.toLowerCase().includes(search.toLowerCase());
       const matchesComplexity =
         complexity === 'all' ||
-        (complexity === 'easy' && game.complexity < 2.2) ||
-        (complexity === 'mid' && game.complexity >= 2.2 && game.complexity < 3.2) ||
-        (complexity === 'heavy' && game.complexity >= 3.2);
+        (complexity === 'easy' && game.complexity < COMPLEXITY_GATEWAY_MAX) ||
+        (complexity === 'mid' && game.complexity >= COMPLEXITY_GATEWAY_MAX && game.complexity < COMPLEXITY_MIDWEIGHT_MAX) ||
+        (complexity === 'heavy' && game.complexity >= COMPLEXITY_MIDWEIGHT_MAX);
       const matchesPlayers =
         players === 'all' ||
         (players === 'solo' && game.playerMin === 1) ||

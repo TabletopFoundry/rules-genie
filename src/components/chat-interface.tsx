@@ -29,9 +29,18 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
 
   const conversationEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when history changes or loading state changes
+  // Auto-scroll to bottom only when user is already near the bottom
   useEffect(() => {
-    conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = conversationEndRef.current?.parentElement;
+    if (!el) {
+      conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    const threshold = 150;
+    const isNearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
+    if (isNearBottom) {
+      conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [history.length, loading]);
 
   // Auto-submit initial question from ?q= param after session is ready
@@ -61,6 +70,10 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
     setSuggestions([]);
     void askQuestion(suggestion);
   }
+
+  const lastMode = history.length > 0 ? history[history.length - 1].mode : undefined;
+  const modeLabel = lastMode === 'openai' ? 'AI mode' : lastMode === 'fallback' ? 'Fallback mode' : 'Demo mode';
+  const modeBg = lastMode === 'openai' ? 'bg-green-100' : lastMode === 'fallback' ? 'bg-amber-100' : 'bg-board-gold/15';
 
   if (!selectedGame) {
     return null;
@@ -132,9 +145,12 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-board-forest">Conversation</p>
             <h3 className="mt-2 text-2xl font-bold text-board-pine">{selectedGame.name}</h3>
           </div>
-          <div className="rounded-full bg-board-gold/15 px-4 py-2 text-sm font-semibold text-board-pine">
-            Demo mode {loading ? '· answering…' : 'ready'}
+          <div className={`rounded-full ${modeBg} px-4 py-2 text-sm font-semibold text-board-pine`}>
+            {modeLabel} {loading ? '· answering…' : 'ready'}
           </div>
+          {lastMode === 'fallback' && (
+            <p className="w-full text-xs text-amber-700">AI unavailable — showing a best-effort demo answer.</p>
+          )}
         </div>
 
         <ConversationThread

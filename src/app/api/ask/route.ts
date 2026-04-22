@@ -7,9 +7,9 @@ import { getConversation, saveQaPair } from '@/lib/db';
 export const runtime = 'nodejs';
 
 const schema = z.object({
-  sessionId: z.string().min(1),
-  gameId: z.string().min(1),
-  question: z.string().min(3).max(500)
+  sessionId: z.string().trim().min(1).max(100),
+  gameId: z.string().trim().min(1).max(100),
+  question: z.string().trim().min(3).max(500)
 });
 
 export async function POST(request: Request) {

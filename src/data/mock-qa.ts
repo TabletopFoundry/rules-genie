@@ -206,7 +206,7 @@ export const MOCK_QA: MockQa[] = [
   },
   {
     id: 'generic-strategy',
-    gameId: 'catan',
+    gameId: null,
     questionPatterns: ['What is the best move?', 'Should I do this?'],
     keywords: ['best', 'should', 'strategy'],
     answer: 'That sounds like strategy advice rather than an official rules ruling. I can still help, but I will treat it as table advice instead of a citation-backed answer.',

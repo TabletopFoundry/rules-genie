@@ -6,8 +6,8 @@ import { getConversation } from '@/lib/db';
 export const runtime = 'nodejs';
 
 const schema = z.object({
-  sessionId: z.string().min(1),
-  gameId: z.string().min(1)
+  sessionId: z.string().trim().min(1).max(100),
+  gameId: z.string().trim().min(1).max(100)
 });
 
 export async function GET(request: Request) {

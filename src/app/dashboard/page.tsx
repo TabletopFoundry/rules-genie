@@ -1,6 +1,15 @@
+import type { Metadata } from 'next';
+
 import { DashboardClient } from '@/components/dashboard-client';
 import { SectionHeading } from '@/components/section-heading';
 import { getDashboardSnapshot, listGames } from '@/lib/db';
+
+export const metadata: Metadata = {
+  title: 'Dashboard — RulesGenie',
+  description: 'Your saved game collection, recent rules questions, and bookmarked answers.',
+  openGraph: { title: 'Dashboard — RulesGenie', description: 'Your saved game collection and rules history.' },
+  twitter: { card: 'summary', title: 'Dashboard — RulesGenie', description: 'Your saved game collection and rules history.' }
+};
 
 export default function DashboardPage() {
   const snapshot = getDashboardSnapshot();

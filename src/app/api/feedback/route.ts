@@ -6,10 +6,10 @@ import { saveFeedback } from '@/lib/db';
 export const runtime = 'nodejs';
 
 const schema = z.object({
-  sessionId: z.string().min(1),
-  qaPairId: z.string().min(1),
+  sessionId: z.string().trim().min(1).max(100),
+  qaPairId: z.string().trim().min(1).max(100),
   rating: z.enum(['up', 'down']),
-  reason: z.string().optional()
+  reason: z.string().trim().max(500).optional()
 });
 
 export async function POST(request: Request) {

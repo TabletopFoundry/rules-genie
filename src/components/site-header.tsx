@@ -11,6 +11,15 @@ const links = [
   { href: '/dashboard', label: 'Dashboard' }
 ];
 
+/** Return all focusable elements within a container. */
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+  );
+}
+
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLElement>(null);
@@ -21,6 +30,34 @@ export function SiteHeader() {
       const firstLink = menuRef.current.querySelector('a');
       firstLink?.focus();
     }
+  }, [mobileOpen]);
+
+  // Focus trap: keep Tab cycling within the mobile drawer while open
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Tab' && menuRef.current) {
+        const focusable = getFocusableElements(menuRef.current);
+        // Include the close button in the trap
+        if (triggerRef.current) focusable.unshift(triggerRef.current);
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [mobileOpen]);
 
   return (
@@ -35,7 +72,7 @@ export function SiteHeader() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-2 text-sm font-semibold text-slate-600 sm:flex">
+        <nav className="hidden items-center gap-2 text-sm font-semibold text-slate-600 sm:flex" aria-label="Main navigation">
           {links.map((link) => (
             <Link key={link.href} href={link.href} className="rounded-full px-3 py-2 transition hover:bg-board-mist hover:text-board-pine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold">
               {link.label}
@@ -61,6 +98,7 @@ export function SiteHeader() {
       {mobileOpen ? (
         <nav
           ref={menuRef}
+          aria-label="Main navigation"
           className="border-t border-board-forest/10 bg-white px-4 pb-4 pt-2 sm:hidden"
           onKeyDown={(e) => {
             if (e.key === 'Escape') {

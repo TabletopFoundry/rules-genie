@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -6,6 +7,22 @@ import { GameCover } from '@/components/game-cover';
 import { SectionHeading } from '@/components/section-heading';
 import { getCollectionGameIds, getGameById } from '@/lib/db';
 import { getComplexityLabel } from '@/lib/utils';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const game = getGameById(id);
+  if (!game) return { title: 'Game Not Found — RulesGenie' };
+  return {
+    title: `${game.name} — RulesGenie`,
+    description: `${game.tagline}. ${game.description.slice(0, 120)}`,
+    openGraph: {
+      title: `${game.name} — RulesGenie`,
+      description: game.tagline,
+      type: 'article'
+    },
+    twitter: { card: 'summary', title: `${game.name} — RulesGenie`, description: game.tagline }
+  };
+}
 
 export default async function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

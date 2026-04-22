@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BookOpen, LibraryBig, MessageCircleQuestion, Sparkles } from 'lucide-react';
 
@@ -5,6 +6,17 @@ import { FeatureCard } from '@/components/feature-card';
 import { GameCard } from '@/components/game-card';
 import { SectionHeading } from '@/components/section-heading';
 import { getCollectionGameIds, getFeaturedGames, listGames } from '@/lib/db';
+
+export const metadata: Metadata = {
+  title: 'RulesGenie — AI Board Game Rules Assistant',
+  description: 'Stop flipping through rulebooks. Get instant AI-powered rulings with citations for popular board games.',
+  openGraph: {
+    title: 'RulesGenie — AI Board Game Rules Assistant',
+    description: 'Stop flipping through rulebooks. Get instant AI-powered rulings with citations for popular board games.',
+    type: 'website'
+  },
+  twitter: { card: 'summary_large_image', title: 'RulesGenie', description: 'AI-powered board game rules assistant with citations.' }
+};
 
 export default function HomePage() {
   const featuredGames = getFeaturedGames();
