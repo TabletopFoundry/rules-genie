@@ -2,13 +2,28 @@
   "name": "rulesgenie",
   "version": "0.1.0",
   "private": true,
+  "description": "AI-powered board game rules assistant with citation-backed answers, quick-start guides, and a personal dashboard.",
+  "keywords": [
+    "board-games",
+    "rules-assistant",
+    "ai",
+    "nextjs",
+    "openai",
+    "sqlite"
+  ],
+  "license": "MIT",
+  "author": "josedab",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "format": "prettier --write 'src/**/*.{ts,tsx}' '*.{js,json,md}'",
-    "format:check": "prettier --check 'src/**/*.{ts,tsx}' '*.{js,json,md}'"
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write 'src/**/*.{ts,tsx}' '*.{js,ts,json,md}'",
+    "format:check": "prettier --check 'src/**/*.{ts,tsx}' '*.{js,ts,json,md}'"
   },
   "dependencies": {
     "better-sqlite3": "^12.1.0",

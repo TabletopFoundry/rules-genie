@@ -1,0 +1,14 @@
+# Default owners for all files
+* @josedab
+
+# CI/CD and infrastructure
+.github/ @josedab
+next.config.ts @josedab
+tsconfig.json @josedab
+package.json @josedab
+
+# Core business logic
+src/lib/ @josedab
+
+# API routes
+src/app/api/ @josedab

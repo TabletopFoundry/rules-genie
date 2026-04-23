@@ -123,6 +123,7 @@ src/
 | `npm run build` | Create a production build |
 | `npm run start` | Run the production server |
 | `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run TypeScript type checking |
 | `npm run format` | Format code with Prettier |
 | `npm run format:check` | Check formatting without modifying files |
 

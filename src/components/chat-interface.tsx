@@ -8,7 +8,7 @@ import { useRulesSession } from '@/components/hooks/use-rules-session';
 import { QuestionInput } from '@/components/question-input';
 import type { GameRecord } from '@/types';
 
-export function ChatInterface({ games, initialGameId, initialQuestion }: { games: GameRecord[]; initialGameId?: string; initialQuestion?: string }) {
+export function ChatInterface({ games, initialGameId, initialQuestion }: { games: GameRecord[]; initialGameId?: string | undefined; initialQuestion?: string | undefined }) {
   const [selectedGameId, setSelectedGameId] = useState(initialGameId ?? games[0]?.id ?? '');
   const [question, setQuestion] = useState(initialQuestion ?? '');
 
@@ -71,7 +71,8 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
     void askQuestion(suggestion);
   }
 
-  const lastMode = history.length > 0 ? history[history.length - 1].mode : undefined;
+  const lastItem = history.length > 0 ? history[history.length - 1] : undefined;
+  const lastMode = lastItem?.mode;
   const modeLabel = lastMode === 'openai' ? 'AI mode' : lastMode === 'fallback' ? 'Fallback mode' : 'Demo mode';
   const modeBg = lastMode === 'openai' ? 'bg-green-100' : lastMode === 'fallback' ? 'bg-amber-100' : 'bg-board-gold/15';
 

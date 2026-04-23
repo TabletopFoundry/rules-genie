@@ -2,7 +2,7 @@ export type Citation = {
   source: string;
   page: string;
   section: string;
-  note?: string;
+  note?: string | undefined;
 };
 
 export type AiStatus = 'grounded' | 'low-confidence' | 'conflicting' | 'strategy';
@@ -23,7 +23,7 @@ export type GameRecord = {
   quickStart: string[];
   setupGuide: string[];
   exampleQuestions: string[];
-  editionLabel?: string;
+  editionLabel?: string | undefined;
   palette: [string, string, string];
   icon: string;
 };
@@ -37,7 +37,7 @@ export type MockQa = {
   citations: Citation[];
   confidence: number;
   status: AiStatus;
-  suggestions?: string[];
+  suggestions?: string[] | undefined;
 };
 
 export type AiAnswer = {
@@ -62,8 +62,8 @@ export type QaRecord = {
   mode: 'demo' | 'openai' | 'fallback';
   createdAt: string;
   bookmarked: boolean;
-  feedbackRating?: 'up' | 'down' | null;
-  feedbackReason?: string | null;
+  feedbackRating?: 'up' | 'down' | null | undefined;
+  feedbackReason?: string | null | undefined;
 };
 
 export type DashboardSnapshot = {

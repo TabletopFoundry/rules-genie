@@ -21,6 +21,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing sessionId or gameId.' }, { status: 400 });
   }
 
-  const items = getConversation(parsed.data.sessionId, parsed.data.gameId);
-  return NextResponse.json({ items });
+  try {
+    const items = getConversation(parsed.data.sessionId, parsed.data.gameId);
+    return NextResponse.json({ items });
+  } catch {
+    return NextResponse.json({ error: 'Could not load conversation.' }, { status: 500 });
+  }
 }

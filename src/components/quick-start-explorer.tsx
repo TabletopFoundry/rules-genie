@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { GameCover } from '@/components/game-cover';
 import type { GameRecord } from '@/types';
 
-export function QuickStartExplorer({ games, initialGameId }: { games: GameRecord[]; initialGameId?: string }) {
+export function QuickStartExplorer({ games, initialGameId }: { games: GameRecord[]; initialGameId?: string | undefined }) {
   const [selectedId, setSelectedId] = useState(initialGameId ?? games[0]?.id ?? '');
   const selectedGame = useMemo(() => games.find((game) => game.id === selectedId) ?? games[0], [games, selectedId]);
 
