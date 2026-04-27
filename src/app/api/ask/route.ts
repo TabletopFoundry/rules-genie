@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { answerRulesQuestion } from '@/lib/ai';
-import { getConversation, saveQaPair } from '@/lib/db';
+import { getConversation, getGameById, saveQaPair } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
@@ -26,6 +26,15 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Validate gameId before any DB operations to avoid FK-violation 500s (P0-2)
+    const game = getGameById(parsed.data.gameId);
+    if (!game) {
+      return NextResponse.json(
+        { error: 'That game is not in the RulesGenie catalog. Pick a supported game and try again.' },
+        { status: 400 }
+      );
+    }
+
     const history = getConversation(parsed.data.sessionId, parsed.data.gameId);
     const answer = await answerRulesQuestion({
       gameId: parsed.data.gameId,

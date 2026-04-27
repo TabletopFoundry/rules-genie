@@ -96,19 +96,25 @@ export function SiteHeader() {
         </button>
       </div>
 
-      {/* Mobile nav drawer */}
+      {/* Mobile nav backdrop + drawer */}
       {mobileOpen ? (
-        <nav
-          ref={menuRef}
-          aria-label="Main navigation"
-          className="border-t border-board-forest/10 bg-white px-4 pb-4 pt-2 sm:hidden"
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              setMobileOpen(false);
-              triggerRef.current?.focus();
-            }
-          }}
-        >
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/30 sm:hidden"
+            aria-hidden="true"
+            onClick={() => setMobileOpen(false)}
+          />
+          <nav
+            ref={menuRef}
+            aria-label="Main navigation"
+            className="relative z-50 border-t border-board-forest/10 bg-white px-4 pb-4 pt-2 sm:hidden"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setMobileOpen(false);
+                triggerRef.current?.focus();
+              }
+            }}
+          >
           <div className="flex flex-col gap-1">
             {links.map((link) => (
               <Link
@@ -122,7 +128,8 @@ export function SiteHeader() {
             ))}
             <span className="mt-1 rounded-2xl bg-board-gold/20 px-4 py-3 text-sm font-semibold text-board-pine">Demo user</span>
           </div>
-        </nav>
+          </nav>
+        </>
       ) : null}
     </header>
   );

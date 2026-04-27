@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react';
 
+import { ToggleResponseSchema } from '@/lib/api-schemas';
+import { safeJsonParse } from '@/lib/fetch-utils';
 import { cn } from '@/lib/utils';
 
 export function CollectionToggle({
@@ -33,7 +35,8 @@ export function CollectionToggle({
               body: JSON.stringify({ gameId })
             });
             if (!response.ok) throw new Error('Could not update collection.');
-            const payload = (await response.json()) as { active: boolean };
+            const raw = await safeJsonParse<unknown>(response, 'Could not update collection.');
+            const payload = ToggleResponseSchema.parse(raw);
             setActive(payload.active);
             onToggle?.(payload.active);
           } catch (err) {

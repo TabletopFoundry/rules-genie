@@ -29,8 +29,9 @@ export function ConversationThread({
           No questions yet. Start with one of the example prompts or type a rules dispute below.
         </div>
       ) : null}
-      {history.map((item) => (
+      {history.map((item, index) => (
         <article key={item.id} className="space-y-4 rounded-[28px] border border-board-forest/10 p-5">
+          <h4 className="sr-only">Question {index + 1}: {item.question.slice(0, 80)}</h4>
           <div className="rounded-3xl bg-board-pine px-5 py-4 text-white">
             <p className="text-xs uppercase tracking-[0.25em] text-white/70">Player asked</p>
             <p className="mt-2 text-base font-semibold">{item.question}</p>

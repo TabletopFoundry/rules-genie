@@ -11,7 +11,12 @@ export function QuickStartExplorer({ games, initialGameId }: { games: GameRecord
   const selectedGame = useMemo(() => games.find((game) => game.id === selectedId) ?? games[0], [games, selectedId]);
 
   if (!selectedGame) {
-    return null;
+    return (
+      <div className="rounded-[32px] border border-dashed border-board-forest/20 bg-board-canvas p-10 text-center">
+        <p className="text-lg font-semibold text-board-pine">No supported games available</p>
+        <p className="mt-2 text-sm text-slate-600">Check back later or contact support.</p>
+      </div>
+    );
   }
 
   return (

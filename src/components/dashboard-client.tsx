@@ -5,6 +5,8 @@ import { useMemo, useState, useTransition } from 'react';
 
 import { CitationList } from '@/components/citation-list';
 import { StatusPill } from '@/components/status-pill';
+import { ToggleResponseSchema } from '@/lib/api-schemas';
+import { safeJsonParse } from '@/lib/fetch-utils';
 import { timeAgo } from '@/lib/utils';
 import type { DashboardSnapshot, GameRecord } from '@/types';
 
@@ -32,7 +34,8 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
         throw new Error('Could not update your collection. Please try again.');
       }
 
-      const payload = (await response.json()) as { active: boolean };
+      const raw = await safeJsonParse<unknown>(response, 'Could not update your collection. Please try again.');
+      const payload = ToggleResponseSchema.parse(raw);
       const game = games.find((item) => item.id === gameId);
       if (!game) return;
 
@@ -117,7 +120,7 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
             <p className="text-sm text-slate-600">Add games you want fast access to during game night.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <select value={selectedGameId} onChange={(event) => setSelectedGameId(event.target.value)} className="min-w-[240px] rounded-2xl border border-board-forest/10 px-4 py-3 text-sm text-slate-700 outline-none ring-board-gold transition focus:ring-2">
+            <select value={selectedGameId} onChange={(event) => setSelectedGameId(event.target.value)} aria-label="Choose a game to add to your collection" className="w-full sm:min-w-[240px] rounded-2xl border border-board-forest/10 px-4 py-3 text-sm text-slate-700 outline-none ring-board-gold transition focus:ring-2">
               <option value="">Choose a game to add</option>
               {addableGames.map((game) => (
                 <option key={game.id} value={game.id}>
@@ -148,7 +151,7 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
                 <Link href={`/ask?game=${game.id}`} className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-board-pine transition hover:bg-board-mist focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2">
                   Open assistant
                 </Link>
-                <button type="button" onClick={() => startTransition(() => toggleCollection(game.id))} className="rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-board-mist hover:text-board-pine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2">
+                <button type="button" aria-label={`Remove ${game.name} from collection`} onClick={() => startTransition(() => toggleCollection(game.id))} className="rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-board-mist hover:text-board-pine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2">
                   Remove
                 </button>
               </div>
@@ -194,7 +197,7 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
                 <div key={item.id} className="rounded-2xl border border-board-forest/10 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="text-sm font-semibold text-board-forest">{game?.name ?? 'Supported game'}</p>
-                    <button type="button" onClick={() => startTransition(() => removeBookmark(item.id))} className="text-xs font-semibold text-slate-500 transition hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:rounded">
+                    <button type="button" aria-label={`Remove bookmark for: ${item.question.slice(0, 60)}`} onClick={() => startTransition(() => removeBookmark(item.id))} className="text-xs font-semibold text-slate-500 transition hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:rounded">
                       Remove
                     </button>
                   </div>

@@ -3,19 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { QaRecord } from '@/types';
-
-/** Safely parse a JSON response, returning a fallback message on non-JSON bodies. */
-async function safeJsonParse<T>(response: Response, fallbackError: string): Promise<T> {
-  const contentType = response.headers.get('content-type') ?? '';
-  if (!contentType.includes('application/json')) {
-    throw new Error(fallbackError);
-  }
-  try {
-    return (await response.json()) as T;
-  } catch {
-    throw new Error(fallbackError);
-  }
-}
+import { AskResponseSchema, ConversationHistorySchema } from '@/lib/api-schemas';
+import { safeJsonParse } from '@/lib/fetch-utils';
 
 /**
  * Manages conversation state: fetching history, submitting questions, and tracking loading/error/suggestions.
@@ -44,9 +33,12 @@ export function useConversation(sessionId: string, gameId: string) {
         if (!response.ok) {
           throw new Error('Could not load conversation history.');
         }
-        return safeJsonParse<{ items: QaRecord[] }>(response, 'Could not load conversation history.');
+        return safeJsonParse<unknown>(response, 'Could not load conversation history.');
       })
-      .then((payload) => setHistory(payload.items))
+      .then((raw) => {
+        const payload = ConversationHistorySchema.parse(raw);
+        setHistory(payload.items as QaRecord[]);
+      })
       .catch((reason) => {
         if (reason instanceof DOMException && reason.name === 'AbortError') return;
         setError(reason instanceof Error ? reason.message : 'Could not load conversation history.');
@@ -63,17 +55,22 @@ export function useConversation(sessionId: string, gameId: string) {
     setError('');
     setSuggestions([]);
 
+    const askController = new AbortController();
+    const askTimeout = setTimeout(() => askController.abort(), 20_000);
+
     try {
       const response = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, gameId, question: prompt })
+        body: JSON.stringify({ sessionId, gameId, question: prompt }),
+        signal: askController.signal
       });
 
-      const payload = await safeJsonParse<{ item?: QaRecord; suggestions?: string[]; error?: string }>(
+      const raw = await safeJsonParse<unknown>(
         response,
         'RulesGenie could not answer right now.'
       );
+      const payload = AskResponseSchema.parse(raw);
       if (!response.ok || !payload.item) {
         throw new Error(payload.error ?? 'RulesGenie could not answer right now.');
       }
@@ -83,8 +80,13 @@ export function useConversation(sessionId: string, gameId: string) {
         setSuggestions(payload.suggestions);
       }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'RulesGenie could not answer right now.');
+      if (reason instanceof DOMException && reason.name === 'AbortError') {
+        setError('The request timed out. Please try again.');
+      } else {
+        setError(reason instanceof Error ? reason.message : 'RulesGenie could not answer right now.');
+      }
     } finally {
+      clearTimeout(askTimeout);
       setLoading(false);
     }
   }, [gameId, sessionId]);

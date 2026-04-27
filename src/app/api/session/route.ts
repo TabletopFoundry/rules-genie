@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { getConversation } from '@/lib/db';
+import { getConversationHistory, getGameById } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
@@ -22,7 +22,16 @@ export async function GET(request: Request) {
   }
 
   try {
-    const items = getConversation(parsed.data.sessionId, parsed.data.gameId);
+    // Validate gameId before DB operations to avoid FK-violation 500s (P0-2)
+    const game = getGameById(parsed.data.gameId);
+    if (!game) {
+      return NextResponse.json(
+        { error: 'That game is not in the RulesGenie catalog.' },
+        { status: 400 }
+      );
+    }
+
+    const items = getConversationHistory(parsed.data.sessionId, parsed.data.gameId);
     return NextResponse.json({ items });
   } catch {
     return NextResponse.json({ error: 'Could not load conversation.' }, { status: 500 });

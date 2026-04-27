@@ -11,6 +11,7 @@ import type { GameRecord } from '@/types';
 export function ChatInterface({ games, initialGameId, initialQuestion }: { games: GameRecord[]; initialGameId?: string | undefined; initialQuestion?: string | undefined }) {
   const [selectedGameId, setSelectedGameId] = useState(initialGameId ?? games[0]?.id ?? '');
   const [question, setQuestion] = useState(initialQuestion ?? '');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const selectedGame = useMemo(() => games.find((game) => game.id === selectedGameId) ?? games[0], [games, selectedGameId]);
 
@@ -77,12 +78,33 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
   const modeBg = lastMode === 'openai' ? 'bg-green-100' : lastMode === 'fallback' ? 'bg-amber-100' : 'bg-board-gold/15';
 
   if (!selectedGame) {
-    return null;
+    return (
+      <div className="rounded-[32px] border border-dashed border-board-forest/20 bg-board-canvas p-10 text-center">
+        <p className="text-lg font-semibold text-board-pine">No supported games available</p>
+        <p className="mt-2 text-sm text-slate-600">Check back later or contact support.</p>
+      </div>
+    );
   }
 
   return (
     <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
-      <aside className="space-y-5 rounded-[32px] border border-board-forest/10 bg-white p-5 shadow-card xl:sticky xl:top-24 xl:h-fit">
+      {/* Sidebar toggle for tablet (lg but not xl) */}
+      <button
+        type="button"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="flex items-center gap-2 rounded-2xl border border-board-forest/10 bg-white px-4 py-3 text-sm font-semibold text-board-pine shadow-card transition hover:bg-board-mist xl:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
+        aria-expanded={sidebarOpen}
+        aria-controls="chat-sidebar"
+      >
+        <span>{sidebarOpen ? '▼' : '▶'}</span>
+        <span>Session controls &amp; game selector</span>
+        <span className="ml-auto text-xs text-slate-500">{selectedGame.name}</span>
+      </button>
+
+      <aside
+        id="chat-sidebar"
+        className={`space-y-5 rounded-[32px] border border-board-forest/10 bg-white p-5 shadow-card xl:sticky xl:top-24 xl:h-fit ${sidebarOpen ? 'block' : 'hidden xl:block'}`}
+      >
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-board-forest">Session</p>
           <h2 className="mt-2 text-2xl font-bold text-board-pine">Rules Q&A</h2>

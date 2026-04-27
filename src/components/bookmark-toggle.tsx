@@ -3,6 +3,8 @@
 import { Bookmark } from 'lucide-react';
 import { useState, useTransition } from 'react';
 
+import { ToggleResponseSchema } from '@/lib/api-schemas';
+import { safeJsonParse } from '@/lib/fetch-utils';
 import { cn } from '@/lib/utils';
 
 export function BookmarkToggle({ qaPairId, initialActive = false }: { qaPairId: string; initialActive?: boolean }) {
@@ -24,7 +26,8 @@ export function BookmarkToggle({ qaPairId, initialActive = false }: { qaPairId: 
               body: JSON.stringify({ qaPairId })
             });
             if (!response.ok) throw new Error('Could not save bookmark.');
-            const payload = (await response.json()) as { active: boolean };
+            const raw = await safeJsonParse<unknown>(response, 'Could not save bookmark.');
+            const payload = ToggleResponseSchema.parse(raw);
             setActive(payload.active);
           } catch (err) {
             setError(err instanceof Error ? err.message : 'Could not save bookmark.');
