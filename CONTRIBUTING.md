@@ -39,10 +39,13 @@ Use descriptive branch names:
 
 ### Before submitting a PR
 
-1. **Lint your code:** `npm run lint`
-2. **Format your code:** `npm run format`
-3. **Build successfully:** `npm run build`
-4. **Test your changes manually** in the browser
+1. **Run the full validation suite:** `npm run validate`
+   - Or run individual checks:
+     - `npm run lint`
+     - `npm run typecheck`
+     - `npm run format`
+2. **Build successfully:** `npm run build`
+3. **Test your changes manually** in the browser
 
 ### Commit messages
 

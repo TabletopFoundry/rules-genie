@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.github
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.local
+docs
+*.md
+!README.md

@@ -1,0 +1,21 @@
+{
+  "name": "RulesGenie",
+  "short_name": "RulesGenie",
+  "description": "AI-powered board game rules assistant with citation-backed answers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF8EE",
+  "theme_color": "#0F3D31",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

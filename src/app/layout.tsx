@@ -8,8 +8,25 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-heading' });
 
 export const metadata: Metadata = {
-  title: 'RulesGenie',
-  description: 'AI-powered board game rules assistant with citations, quick starts, and a personal dashboard.'
+  title: {
+    default: 'RulesGenie',
+    template: '%s — RulesGenie'
+  },
+  description: 'AI-powered board game rules assistant with citations, quick starts, and a personal dashboard.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'),
+  manifest: '/site.webmanifest',
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: 'website',
+    siteName: 'RulesGenie',
+    title: 'RulesGenie — AI Board Game Rules Assistant',
+    description: 'Stop flipping through rulebooks. Get instant AI-powered rulings with citations for popular board games.'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'RulesGenie',
+    description: 'AI-powered board game rules assistant with citations.'
+  }
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

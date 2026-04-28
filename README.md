@@ -5,6 +5,8 @@
 [![React](https://img.shields.io/badge/React-19-61dafb?logo=react)](https://react.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
+[![CI](https://img.shields.io/github/actions/workflow/status/josedab/rulesgenie/ci.yml?branch=main&label=CI&logo=github)](https://github.com/josedab/rulesgenie/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js)](https://nodejs.org/)
 
 > **Stop flipping through rulebooks. Get the ruling in seconds.**
 
@@ -126,10 +128,23 @@ src/
 | `npm run typecheck` | Run TypeScript type checking |
 | `npm run format` | Format code with Prettier |
 | `npm run format:check` | Check formatting without modifying files |
+| `npm run validate` | Run all checks (lint + typecheck + format + build) |
+| `npm run clean` | Remove build artifacts |
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) for details on how to get started.
+
+## 🐳 Docker
+
+Build and run the production container:
+
+```bash
+docker build -t rulesgenie .
+docker run -p 3000:3000 rulesgenie
+```
+
+The container runs a standalone Next.js server with minimal footprint (~150 MB).
 
 ## 📄 License
 

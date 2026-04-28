@@ -14,8 +14,7 @@ export const metadata: Metadata = {
     title: 'RulesGenie — AI Board Game Rules Assistant',
     description: 'Stop flipping through rulebooks. Get instant AI-powered rulings with citations for popular board games.',
     type: 'website'
-  },
-  twitter: { card: 'summary_large_image', title: 'RulesGenie', description: 'AI-powered board game rules assistant with citations.' }
+  }
 };
 
 export default function HomePage() {

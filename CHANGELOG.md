@@ -10,18 +10,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - GitHub Actions CI workflow (lint, typecheck, format check, build)
+- CI matrix testing across Node.js 18, 20, 22
 - Dependabot configuration for automated dependency updates
 - CHANGELOG.md with keep-a-changelog format
 - CODEOWNERS file for code review routing
-- Health check API endpoint (`GET /api/health`)
-- `package.json` metadata (repository, keywords, engines)
+- Health check API endpoint (`GET /api/health`) with uptime and cache headers
+- `package.json` metadata (repository, bugs, homepage, keywords, engines)
 - TypeScript `next.config.ts` replacing JavaScript config
+- Docker support with multi-stage `Dockerfile` and `.dockerignore`
+- `.nvmrc` for consistent Node.js version across environments
+- `public/robots.txt` for search engine crawling
+- `public/site.webmanifest` for PWA-ready metadata
+- Enhanced `.env.example` with inline documentation and grouped sections
+- `npm run validate` script (lint + typecheck + format + build in one command)
+- `npm run clean` script to remove build artifacts
+- Enhanced ESLint rules (`eqeqeq`, `curly`, `no-throw-literal`, `prefer-template`, `object-shorthand`, `consistent-type-imports`)
+- Global metadata template in layout for DRY page titles
+- Next.js security hardening (`poweredByHeader: false`, `reactStrictMode: true`)
+- Standalone output mode for optimized Docker deployments
 
 ### Changed
 
 - Tightened `tsconfig.json` with `noUncheckedIndexedAccess`, `noUnusedLocals`, `noUnusedParameters`, `exactOptionalPropertyTypes`, and ES2022 target
 - Added try/catch error handling to `GET /api/session` route
 - Updated code to handle stricter TypeScript checks throughout
+- Expanded `.gitignore` with debug logs and Docker overrides
 
 ## [0.1.0] — 2025-07-18
 
