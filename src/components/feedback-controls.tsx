@@ -3,6 +3,7 @@
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useState, useTransition } from 'react';
 
+import { safeJsonParse } from '@/lib/fetch-utils';
 import type { QaRecord } from '@/types';
 
 const reasons = ['incorrect ruling', 'wrong edition', 'unclear explanation', 'bad citation'];
@@ -21,7 +22,10 @@ export function FeedbackControls({ qaPair }: { qaPair: QaRecord }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId: qaPair.sessionId, qaPairId: qaPair.id, rating: nextRating, reason: nextReason })
       });
-      if (!response.ok) throw new Error('Could not save feedback.');
+      if (!response.ok) {
+        const raw = await safeJsonParse<{ error?: string }>(response, 'Could not save feedback.');
+        throw new Error(raw.error ?? 'Could not save feedback.');
+      }
       setRating(nextRating);
       if (nextReason !== undefined) {
         setReason(nextReason);

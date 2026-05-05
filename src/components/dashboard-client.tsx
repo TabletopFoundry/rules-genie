@@ -56,11 +56,19 @@ export function DashboardClient({ initialSnapshot, games }: { initialSnapshot: D
       const response = await fetch('/api/bookmarks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ qaPairId })
+        body: JSON.stringify({ qaPairId, action: 'remove' })
       });
 
       if (!response.ok) {
         throw new Error('Could not remove bookmark. Please try again.');
+      }
+
+      const raw = await safeJsonParse<unknown>(response, 'Could not remove bookmark.');
+      const payload = ToggleResponseSchema.parse(raw);
+
+      if (payload.active) {
+        // Server indicates bookmark is still active — don't remove from UI
+        return;
       }
 
       setSnapshot((current) => ({

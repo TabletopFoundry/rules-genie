@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { toggleBookmark } from '@/lib/db';
+import { removeBookmark, toggleBookmark } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
-const schema = z.object({ qaPairId: z.string().trim().min(1).max(100) });
+const schema = z.object({
+  qaPairId: z.string().trim().min(1).max(100),
+  action: z.enum(['toggle', 'remove']).default('toggle')
+});
 
 export async function POST(request: Request) {
   let payload: unknown;
@@ -21,6 +24,9 @@ export async function POST(request: Request) {
   }
 
   try {
+    if (parsed.data.action === 'remove') {
+      return NextResponse.json(removeBookmark(parsed.data.qaPairId));
+    }
     return NextResponse.json(toggleBookmark(parsed.data.qaPairId));
   } catch {
     return NextResponse.json({ error: 'Failed to toggle bookmark.' }, { status: 500 });
