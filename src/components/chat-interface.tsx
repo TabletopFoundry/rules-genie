@@ -8,14 +8,36 @@ import { useRulesSession } from '@/components/hooks/use-rules-session';
 import { QuestionInput } from '@/components/question-input';
 import type { GameRecord } from '@/types';
 
+function getValidGameId(games: GameRecord[], gameId?: string) {
+  if (gameId && games.some((game) => game.id === gameId)) {
+    return gameId;
+  }
+
+  return games[0]?.id ?? '';
+}
+
 export function ChatInterface({ games, initialGameId, initialQuestion }: { games: GameRecord[]; initialGameId?: string | undefined; initialQuestion?: string | undefined }) {
-  const [selectedGameId, setSelectedGameId] = useState(initialGameId ?? games[0]?.id ?? '');
+  const [selectedGameId, setSelectedGameId] = useState(() => getValidGameId(games, initialGameId));
   const [question, setQuestion] = useState(initialQuestion ?? '');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const selectedGame = useMemo(() => games.find((game) => game.id === selectedGameId) ?? games[0], [games, selectedGameId]);
+  const validSelectedGameId = useMemo(
+    () => getValidGameId(games, selectedGameId),
+    [games, selectedGameId]
+  );
 
-  const { sessionId, clearSession } = useRulesSession(selectedGameId);
+  useEffect(() => {
+    if (validSelectedGameId !== selectedGameId) {
+      setSelectedGameId(validSelectedGameId);
+    }
+  }, [selectedGameId, validSelectedGameId]);
+
+  const selectedGame = useMemo(
+    () => games.find((game) => game.id === validSelectedGameId) ?? games[0],
+    [games, validSelectedGameId]
+  );
+
+  const { sessionId, clearSession } = useRulesSession(validSelectedGameId);
   const {
     history,
     loading,
@@ -26,7 +48,7 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
     askQuestion,
     resetConversation,
     initialQuestionFired
-  } = useConversation(sessionId, selectedGameId);
+  } = useConversation(sessionId, validSelectedGameId);
 
   const conversationEndRef = useRef<HTMLDivElement>(null);
 
@@ -113,7 +135,7 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
         <label className="block text-sm font-semibold text-board-pine">
           Supported game
           <select
-            value={selectedGameId}
+            value={validSelectedGameId}
             onChange={(event) => setSelectedGameId(event.target.value)}
             className="mt-2 w-full rounded-2xl border border-board-forest/10 px-4 py-3 text-sm text-slate-700 outline-none ring-board-gold transition focus-visible:ring-2"
           >

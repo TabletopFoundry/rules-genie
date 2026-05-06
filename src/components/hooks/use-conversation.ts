@@ -27,6 +27,7 @@ export function useConversation(sessionId: string, gameId: string) {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
+    setError('');
     setHydrating(true);
     fetch(`/api/session?sessionId=${sessionId}&gameId=${gameId}`, { signal: controller.signal })
       .then(async (response) => {
