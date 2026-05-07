@@ -73,12 +73,13 @@ Open [http://localhost:3000](http://localhost:3000) — the app works immediatel
 | `RULESGENIE_DEMO_MODE` | `true` | Keep the app in mock mode with scripted answers |
 | `OPENAI_API_KEY` | — | Your OpenAI API key for live AI responses |
 | `OPENAI_MODEL` | `gpt-4o-mini` | Override the default OpenAI model |
+| `RULESGENIE_DB_PATH` | `./rulesgenie.db` | Override the SQLite database location |
 
 If no API key is present, the app automatically falls back to demo mode. No configuration required to get started.
 
 ## 🗄️ Persistence
 
-The app creates a local `rulesgenie.db` SQLite file in the project root (auto-generated, git-ignored). It stores:
+The app stores data in SQLite. By default it uses `./rulesgenie.db`, and you can override that path with `RULESGENIE_DB_PATH`. The production Docker image points that variable at `/app/data/rulesgenie.db` so data can live on a mounted volume. It stores:
 
 - Supported game metadata (20 games, seeded on first run)
 - Mock user dashboard data
@@ -141,10 +142,10 @@ Build and run the production container:
 
 ```bash
 docker build -t rulesgenie .
-docker run -p 3000:3000 rulesgenie
+docker run -p 3000:3000 -v rulesgenie-data:/app/data rulesgenie
 ```
 
-The container runs a standalone Next.js server with minimal footprint (~150 MB).
+The container runs a standalone Next.js server with minimal footprint (~150 MB) and persists SQLite data in `/app/data`.
 
 ## 📄 License
 

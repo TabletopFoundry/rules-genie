@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { QaRecord } from '@/types';
 import { AskResponseSchema, ConversationHistorySchema } from '@/lib/api-schemas';
 import { safeJsonParse } from '@/lib/fetch-utils';
+import type { QaRecord } from '@/types';
 
 /**
  * Manages conversation state: fetching history, submitting questions, and tracking loading/error/suggestions.
@@ -16,16 +16,38 @@ export function useConversation(sessionId: string, gameId: string) {
   const [error, setError] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const initialQuestionFired = useRef(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const historyAbortControllerRef = useRef<AbortController | null>(null);
+  const askAbortControllerRef = useRef<AbortController | null>(null);
+  const askTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearAskTimeout = useCallback(() => {
+    if (askTimeoutRef.current) {
+      clearTimeout(askTimeoutRef.current);
+      askTimeoutRef.current = null;
+    }
+  }, []);
+
+  const abortPendingAsk = useCallback(() => {
+    askAbortControllerRef.current?.abort();
+    askAbortControllerRef.current = null;
+    clearAskTimeout();
+  }, [clearAskTimeout]);
+
+  const cancelPendingAsk = useCallback(() => {
+    abortPendingAsk();
+    setLoading(false);
+  }, [abortPendingAsk]);
 
   // Fetch conversation history when session/game change
   useEffect(() => {
     if (!sessionId || !gameId) return;
 
+    cancelPendingAsk();
+
     // Cancel any in-flight history fetch (e.g. rapid game switching)
-    abortControllerRef.current?.abort();
+    historyAbortControllerRef.current?.abort();
     const controller = new AbortController();
-    abortControllerRef.current = controller;
+    historyAbortControllerRef.current = controller;
 
     setError('');
     setHydrating(true);
@@ -44,20 +66,43 @@ export function useConversation(sessionId: string, gameId: string) {
         if (reason instanceof DOMException && reason.name === 'AbortError') return;
         setError(reason instanceof Error ? reason.message : 'Could not load conversation history.');
       })
-      .finally(() => setHydrating(false));
+      .finally(() => {
+        if (historyAbortControllerRef.current === controller) {
+          historyAbortControllerRef.current = null;
+        }
+        setHydrating(false);
+      });
 
-    return () => controller.abort();
-  }, [gameId, sessionId]);
+    return () => {
+      controller.abort();
+      if (historyAbortControllerRef.current === controller) {
+        historyAbortControllerRef.current = null;
+      }
+    };
+  }, [cancelPendingAsk, gameId, sessionId]);
+
+  useEffect(() => {
+    return () => {
+      historyAbortControllerRef.current?.abort();
+      abortPendingAsk();
+    };
+  }, [abortPendingAsk]);
 
   const askQuestion = useCallback(async (prompt: string) => {
     if (!prompt || !sessionId || !gameId) return;
 
+    cancelPendingAsk();
     setLoading(true);
     setError('');
     setSuggestions([]);
 
     const askController = new AbortController();
-    const askTimeout = setTimeout(() => askController.abort(), 20_000);
+    askAbortControllerRef.current = askController;
+    let timedOut = false;
+    askTimeoutRef.current = setTimeout(() => {
+      timedOut = true;
+      askController.abort();
+    }, 20_000);
 
     try {
       const response = await fetch('/api/ask', {
@@ -82,21 +127,27 @@ export function useConversation(sessionId: string, gameId: string) {
       }
     } catch (reason) {
       if (reason instanceof DOMException && reason.name === 'AbortError') {
-        setError('The request timed out. Please try again.');
+        if (timedOut) {
+          setError('The request timed out. Please try again.');
+        }
       } else {
         setError(reason instanceof Error ? reason.message : 'RulesGenie could not answer right now.');
       }
     } finally {
-      clearTimeout(askTimeout);
+      if (askAbortControllerRef.current === askController) {
+        askAbortControllerRef.current = null;
+      }
+      clearAskTimeout();
       setLoading(false);
     }
-  }, [gameId, sessionId]);
+  }, [cancelPendingAsk, clearAskTimeout, gameId, sessionId]);
 
   const resetConversation = useCallback(() => {
+    cancelPendingAsk();
     setHistory([]);
     setSuggestions([]);
     setError('');
-  }, []);
+  }, [cancelPendingAsk]);
 
   return {
     history,
