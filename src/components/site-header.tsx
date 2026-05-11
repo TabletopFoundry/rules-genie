@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
 const links = [
@@ -10,6 +11,10 @@ const links = [
   { href: '/quick-start', label: 'Quick Start' },
   { href: '/dashboard', label: 'Dashboard' }
 ];
+
+function isActiveLink(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 /** Return all focusable elements within a container. */
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
@@ -21,6 +26,7 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
 }
 
 export function SiteHeader() {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -75,11 +81,20 @@ export function SiteHeader() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-2 text-sm font-semibold text-slate-600 sm:flex" aria-label="Main navigation">
-          {links.map((link) => (
-            <Link key={link.href} href={link.href} className="rounded-full px-3 py-2 transition hover:bg-board-mist hover:text-board-pine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold">
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link) => {
+            const active = isActiveLink(pathname, link.href);
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? 'page' : undefined}
+                className={`rounded-full px-3 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold ${active ? 'bg-board-mist text-board-pine' : 'hover:bg-board-mist hover:text-board-pine'}`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <span className="rounded-full bg-board-gold/20 px-3 py-2 text-board-pine">Demo user</span>
         </nav>
 
@@ -116,16 +131,21 @@ export function SiteHeader() {
             }}
           >
           <div className="flex flex-col gap-1">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-2xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-board-mist hover:text-board-pine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {links.map((link) => {
+              const active = isActiveLink(pathname, link.href);
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`rounded-2xl px-4 py-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold ${active ? 'bg-board-mist text-board-pine' : 'text-slate-600 hover:bg-board-mist hover:text-board-pine'}`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
             <span className="mt-1 rounded-2xl bg-board-gold/20 px-4 py-3 text-sm font-semibold text-board-pine">Demo user</span>
           </div>
           </nav>

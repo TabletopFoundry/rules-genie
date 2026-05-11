@@ -22,7 +22,7 @@ export function ConversationThread({
   onSuggestionClick: (suggestion: string) => void;
 }) {
   return (
-    <div className="mt-6 space-y-5" aria-live="polite" aria-relevant="additions">
+    <div className="mt-6 space-y-5">
       {hydrating ? <p className="text-sm text-slate-500" role="status">Loading your conversation…</p> : null}
       {!hydrating && !history.length ? (
         <div className="rounded-[28px] border border-dashed border-board-forest/20 bg-board-canvas p-8 text-sm text-slate-600">
