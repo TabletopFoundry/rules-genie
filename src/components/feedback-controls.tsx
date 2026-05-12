@@ -1,7 +1,7 @@
 'use client';
 
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 
 import { safeJsonParse } from '@/lib/fetch-utils';
 import type { QaRecord } from '@/types';
@@ -13,6 +13,7 @@ export function FeedbackControls({ qaPair }: { qaPair: QaRecord }) {
   const [reason, setReason] = useState(qaPair.feedbackReason ?? '');
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
+  const reasonSelectRef = useRef<HTMLSelectElement>(null);
 
   async function submit(nextRating: 'up' | 'down', nextReason?: string) {
     setError('');
@@ -49,7 +50,12 @@ export function FeedbackControls({ qaPair }: { qaPair: QaRecord }) {
         </button>
         <button
           type="button"
-          onClick={() => startTransition(() => submit('down', reason || reasons[0]))}
+          onClick={() => {
+            startTransition(() => submit('down', reason || undefined));
+            if (!reason) {
+              requestAnimationFrame(() => reasonSelectRef.current?.focus());
+            }
+          }}
           className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 ${rating === 'down' ? 'border-rose-500 bg-rose-50 text-rose-800' : 'border-board-forest/15 bg-white text-slate-600'}`}
           disabled={isPending}
           aria-pressed={rating === 'down'}
@@ -58,18 +64,19 @@ export function FeedbackControls({ qaPair }: { qaPair: QaRecord }) {
         </button>
       </div>
       <label className="block text-xs text-slate-500">
-        If it missed the mark, pick a reason.
+        Add a reason if it missed the mark.
         <select
+          ref={reasonSelectRef}
           aria-label="Feedback reason"
           value={reason}
           onChange={(event) => {
             const nextReason = event.target.value;
             setReason(nextReason);
             if (rating === 'down') {
-              startTransition(() => submit('down', nextReason));
+              startTransition(() => submit('down', nextReason || undefined));
             }
           }}
-          className="mt-2 w-full rounded-2xl border border-board-forest/15 bg-white px-3 py-2 text-sm text-slate-700"
+          className="mt-2 w-full rounded-2xl border border-board-forest/15 bg-white px-3 py-2 text-sm text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
         >
           <option value="">Select a reason</option>
           {reasons.map((item) => (
