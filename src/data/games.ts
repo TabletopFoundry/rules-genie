@@ -1,5 +1,7 @@
 import type { GameRecord } from '@/types';
 
+import { EXTRA_GAMES } from './extra-games';
+
 export const GAMES: GameRecord[] = [
   {
     id: 'catan',
@@ -380,5 +382,6 @@ export const GAMES: GameRecord[] = [
     exampleQuestions: ['Can I replay a site in the same round?', 'When do I resolve assistants?', 'How do fear cards hurt my score?'],
     palette: ['#0F766E', '#5EEAD4', '#083344'],
     icon: '🗺️'
-  }
+  },
+  ...EXTRA_GAMES
 ];

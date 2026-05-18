@@ -10,7 +10,7 @@
 
 > **Stop flipping through rulebooks. Get the ruling in seconds.**
 
-RulesGenie is an AI-powered board game rules assistant that answers natural-language questions with citation-backed answers. It supports 20 popular board games out of the box, works entirely in demo mode without any API keys, and optionally integrates with OpenAI for production-grade responses.
+RulesGenie is an AI-powered board game rules assistant that answers natural-language questions with citation-backed answers. It supports 35 popular board games out of the box, works entirely in demo mode without any API keys, and optionally integrates with OpenAI for production-grade responses.
 
 ---
 
@@ -81,8 +81,8 @@ If no API key is present, the app automatically falls back to demo mode. No conf
 
 The app stores data in SQLite. By default it uses `./rulesgenie.db`, and you can override that path with `RULESGENIE_DB_PATH`. The production Docker image points that variable at `/app/data/rulesgenie.db` so data can live on a mounted volume. It stores:
 
-- Supported game metadata (20 games, seeded on first run)
-- Mock user dashboard data
+- Supported game metadata (35 games in development)
+- Development user personas, collections, bookmarks, sessions, and feedback
 - Chat history by session
 - Saved answers / bookmarks
 - Answer feedback (thumbs up/down)
@@ -131,6 +131,18 @@ src/
 | `npm run format:check` | Check formatting without modifying files |
 | `npm run validate` | Run all checks (lint + typecheck + format + build) |
 | `npm run clean` | Remove build artifacts |
+
+## 🌱 Development Seed Data
+
+In non-production environments, RulesGenie reseeds SQLite automatically on startup with a deterministic development dataset.
+
+- **35 board games** covering gateway, euro, co-op, party, and heavyweight titles
+- **3 user personas**: a power user (`demo-user`), a casual player, and a brand-new account
+- **124 seeded Q&A rows** sourced from a **100+ entry rules bank** with realistic citations, bookmarks, collections, and feedback
+- **Multiple conversation sessions** with short and long histories, plus edge cases like unicode names, long questions, null optionals, and varied confidence values
+- **Production-safe behavior**: the development seed routine is skipped entirely when `NODE_ENV=production`
+
+If you want a fresh development dataset, stop the app, delete `rulesgenie.db`, and start `npm run dev` again.
 
 ## 🤝 Contributing
 

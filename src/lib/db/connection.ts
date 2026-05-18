@@ -51,7 +51,9 @@ export function getDb() {
   if (!initialized) {
     try {
       initializeDatabase(db);
-      seedDatabase(db);
+      if (process.env.NODE_ENV !== 'production') {
+        seedDatabase(db);
+      }
       initialized = true;
       if (process.env.NODE_ENV !== 'production') {
         global.__rulesGenieDbInitialized = true;
