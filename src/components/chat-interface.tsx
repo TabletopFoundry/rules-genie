@@ -1,28 +1,33 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { ConversationThread } from '@/components/conversation-thread';
 import { useConversation } from '@/components/hooks/use-conversation';
 import { useRulesSession } from '@/components/hooks/use-rules-session';
 import { QuestionInput } from '@/components/question-input';
+import { describeAssistantMode, resolveRequestedGameId, type AssistantModePreference } from '@/lib/ux';
 import type { GameRecord } from '@/types';
 
-function getValidGameId(games: GameRecord[], gameId?: string) {
-  if (gameId && games.some((game) => game.id === gameId)) {
-    return gameId;
-  }
-
-  return games[0]?.id ?? '';
-}
-
-export function ChatInterface({ games, initialGameId, initialQuestion }: { games: GameRecord[]; initialGameId?: string | undefined; initialQuestion?: string | undefined }) {
-  const [selectedGameId, setSelectedGameId] = useState(() => getValidGameId(games, initialGameId));
+export function ChatInterface({
+  games,
+  initialGameId,
+  initialQuestion,
+  preferredMode
+}: {
+  games: GameRecord[];
+  initialGameId?: string | undefined;
+  initialQuestion?: string | undefined;
+  preferredMode: AssistantModePreference;
+}) {
+  const initialSelection = useMemo(() => resolveRequestedGameId(games, initialGameId), [games, initialGameId]);
+  const [selectedGameId, setSelectedGameId] = useState(initialSelection.selectedGameId);
   const [question, setQuestion] = useState(initialQuestion ?? '');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const validSelectedGameId = useMemo(
-    () => getValidGameId(games, selectedGameId),
+    () => resolveRequestedGameId(games, selectedGameId).selectedGameId,
     [games, selectedGameId]
   );
 
@@ -52,7 +57,6 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
 
   const conversationEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom only when user is already near the bottom
   useEffect(() => {
     const el = conversationEndRef.current?.parentElement;
     if (!el) {
@@ -66,7 +70,6 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
     }
   }, [history.length, loading]);
 
-  // Auto-submit initial question from ?q= param after session is ready
   useEffect(() => {
     if (initialQuestion && sessionId && !hydrating && !initialQuestionFired.current) {
       initialQuestionFired.current = true;
@@ -96,8 +99,8 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
 
   const lastItem = history.length > 0 ? history[history.length - 1] : undefined;
   const lastMode = lastItem?.mode;
-  const modeLabel = lastMode === 'openai' ? 'AI mode' : lastMode === 'fallback' ? 'Fallback mode' : 'Demo mode';
-  const modeBg = lastMode === 'openai' ? 'bg-green-100' : lastMode === 'fallback' ? 'bg-amber-100' : 'bg-board-gold/15';
+  const modeMeta = describeAssistantMode(preferredMode, lastMode);
+  const savedRulingsLabel = history.length === 1 ? '1 saved ruling' : `${history.length} saved rulings`;
 
   if (!selectedGame) {
     return (
@@ -110,7 +113,6 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
 
   return (
     <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
-      {/* Sidebar toggle for tablet (lg but not xl) */}
       <button
         type="button"
         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -130,7 +132,9 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-board-forest">Session</p>
           <h2 className="mt-2 text-2xl font-bold text-board-pine">Rules Q&A</h2>
-          <p className="mt-2 text-sm text-slate-600">Choose a supported game, then ask plain-English rules questions with session memory and visible citations.</p>
+          <p className="mt-2 text-sm text-slate-600">
+            Choose a supported game, then ask plain-English rules questions with session memory and visible citations.
+          </p>
         </div>
         <label className="block text-sm font-semibold text-board-pine">
           Supported game
@@ -146,6 +150,23 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
             ))}
           </select>
         </label>
+        <div className="rounded-2xl border border-board-forest/10 bg-board-canvas p-4 text-sm text-slate-600">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`rounded-full ${modeMeta.badgeTone} px-3 py-1 text-xs font-semibold text-board-pine`}>
+              {modeMeta.badgeLabel}
+            </span>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-board-pine">
+              {history.length ? savedRulingsLabel : 'New local session'}
+            </span>
+          </div>
+          <p className="mt-3">{modeMeta.description}</p>
+          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Session memory</p>
+          <p className="mt-1">
+            {history.length
+              ? `${savedRulingsLabel} for ${selectedGame.name} live on this device. “New session” clears only this game's local thread.`
+              : `Questions for ${selectedGame.name} stay on this device until you start a new session.`}
+          </p>
+        </div>
         <div className="rounded-2xl bg-board-canvas p-4">
           <p className="text-sm font-semibold text-board-pine">{selectedGame.name}</p>
           <p className="mt-1 text-sm text-slate-600">{selectedGame.tagline}</p>
@@ -190,13 +211,28 @@ export function ChatInterface({ games, initialGameId, initialQuestion }: { games
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-board-forest">Conversation</p>
             <h3 className="mt-2 text-2xl font-bold text-board-pine">{selectedGame.name}</h3>
           </div>
-          <div className={`rounded-full ${modeBg} px-4 py-2 text-sm font-semibold text-board-pine`}>
-            {modeLabel} {loading ? '· answering…' : 'ready'}
+          <div className={`rounded-full ${modeMeta.badgeTone} px-4 py-2 text-sm font-semibold text-board-pine`}>
+            {modeMeta.badgeLabel} {loading ? '· answering…' : 'ready'}
           </div>
-          {lastMode === 'fallback' && (
-            <p className="w-full text-xs text-amber-700">AI unavailable — showing a best-effort demo answer.</p>
-          )}
+          {lastMode === 'fallback' ? (
+            <p className="w-full text-xs text-amber-700">
+              Live AI was unavailable for the last request, so RulesGenie showed a best-effort demo answer.
+            </p>
+          ) : null}
         </div>
+
+        {initialSelection.requestedGameMissing ? (
+          <div
+            className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+            role="status"
+          >
+            That shared link pointed to an unsupported game, so RulesGenie opened{' '}
+            <span className="font-semibold">{selectedGame.name}</span> instead.
+            <Link href="/games" className="ml-2 font-semibold text-amber-900 underline underline-offset-4">
+              Browse supported games
+            </Link>
+          </div>
+        ) : null}
 
         <ConversationThread
           history={history}

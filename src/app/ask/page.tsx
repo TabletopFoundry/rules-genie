@@ -3,12 +3,20 @@ import type { Metadata } from 'next';
 import { ChatInterface } from '@/components/chat-interface';
 import { SectionHeading } from '@/components/section-heading';
 import { listGames } from '@/lib/db';
+import type { AssistantModePreference } from '@/lib/ux';
 
 export const metadata: Metadata = {
   title: 'Ask Rules — RulesGenie',
   description: 'Ask natural-language board game rules questions and get instant answers with source citations.',
-  openGraph: { title: 'Ask Rules — RulesGenie', description: 'AI-powered rules Q&A with session memory and citations.' },
-  twitter: { card: 'summary', title: 'Ask Rules — RulesGenie', description: 'AI-powered rules Q&A with session memory and citations.' }
+  openGraph: {
+    title: 'Ask Rules — RulesGenie',
+    description: 'AI-powered rules Q&A with session memory and citations.'
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Ask Rules — RulesGenie',
+    description: 'AI-powered rules Q&A with session memory and citations.'
+  }
 };
 
 export default async function AskPage({
@@ -20,6 +28,8 @@ export default async function AskPage({
   const initialGameId = typeof params.game === 'string' ? params.game : undefined;
   const initialQuestion = typeof params.q === 'string' ? params.q : undefined;
   const games = listGames();
+  const preferredMode: AssistantModePreference =
+    process.env.RULESGENIE_DEMO_MODE === 'false' && process.env.OPENAI_API_KEY ? 'live' : 'demo';
 
   return (
     <div className="space-y-8 pb-8">
@@ -28,7 +38,12 @@ export default async function AskPage({
         title="Ask a rules question and keep the game moving"
         description="Demo mode works out of the box. Add an OpenAI key later if you want production-style generation grounded in the same curated context."
       />
-      <ChatInterface games={games} initialGameId={initialGameId} initialQuestion={initialQuestion} />
+      <ChatInterface
+        games={games}
+        initialGameId={initialGameId}
+        initialQuestion={initialQuestion}
+        preferredMode={preferredMode}
+      />
     </div>
   );
 }

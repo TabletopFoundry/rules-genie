@@ -1,14 +1,32 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { GameCover } from '@/components/game-cover';
+import { resolveRequestedGameId } from '@/lib/ux';
 import type { GameRecord } from '@/types';
 
-export function QuickStartExplorer({ games, initialGameId }: { games: GameRecord[]; initialGameId?: string | undefined }) {
-  const [selectedId, setSelectedId] = useState(initialGameId ?? games[0]?.id ?? '');
-  const selectedGame = useMemo(() => games.find((game) => game.id === selectedId) ?? games[0], [games, selectedId]);
+export function QuickStartExplorer({
+  games,
+  initialGameId
+}: {
+  games: GameRecord[];
+  initialGameId?: string | undefined;
+}) {
+  const initialSelection = useMemo(() => resolveRequestedGameId(games, initialGameId), [games, initialGameId]);
+  const [selectedId, setSelectedId] = useState(initialSelection.selectedGameId);
+  const validSelectedId = useMemo(() => resolveRequestedGameId(games, selectedId).selectedGameId, [games, selectedId]);
+  const selectedGame = useMemo(
+    () => games.find((game) => game.id === validSelectedId) ?? games[0],
+    [games, validSelectedId]
+  );
+
+  useEffect(() => {
+    if (validSelectedId !== selectedId) {
+      setSelectedId(validSelectedId);
+    }
+  }, [selectedId, validSelectedId]);
 
   if (!selectedGame) {
     return (
@@ -21,12 +39,26 @@ export function QuickStartExplorer({ games, initialGameId }: { games: GameRecord
 
   return (
     <div className="space-y-8">
+      {initialSelection.requestedGameMissing ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="status">
+          That quick-start link pointed to an unsupported title, so RulesGenie opened{' '}
+          <span className="font-semibold">{selectedGame.name}</span> instead.
+          <Link href="/games" className="ml-2 font-semibold text-amber-900 underline underline-offset-4">
+            Browse supported games
+          </Link>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 rounded-[32px] border border-board-forest/10 bg-white p-5 shadow-card lg:grid-cols-[1.2fr_2fr]">
         <GameCover game={selectedGame} className="aspect-[4/5] h-full min-h-[300px]" />
         <div className="space-y-5">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-board-gold/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-board-pine">Quick-start mode</span>
-            <span className="rounded-full bg-board-mist px-3 py-1 text-xs font-semibold text-board-pine">{selectedGame.playerMin}–{selectedGame.playerMax} players</span>
+            <span className="rounded-full bg-board-gold/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-board-pine">
+              Quick-start mode
+            </span>
+            <span className="rounded-full bg-board-mist px-3 py-1 text-xs font-semibold text-board-pine">
+              {selectedGame.playerMin}–{selectedGame.playerMax} players
+            </span>
           </div>
           <div className="space-y-2">
             <h2 className="text-3xl font-bold text-board-pine">{selectedGame.name}</h2>
@@ -35,7 +67,7 @@ export function QuickStartExplorer({ games, initialGameId }: { games: GameRecord
           <label className="block text-sm font-semibold text-board-pine">
             Pick a game
             <select
-              value={selectedId}
+              value={validSelectedId}
               onChange={(event) => setSelectedId(event.target.value)}
               className="mt-2 w-full rounded-2xl border border-board-forest/10 px-4 py-3 text-sm text-slate-700 outline-none ring-board-gold transition focus:ring-2"
             >
@@ -47,10 +79,16 @@ export function QuickStartExplorer({ games, initialGameId }: { games: GameRecord
             </select>
           </label>
           <div className="flex flex-wrap gap-3">
-            <Link href={`/ask?game=${selectedGame.id}`} className="inline-flex rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white">
+            <Link
+              href={`/ask?game=${selectedGame.id}`}
+              className="inline-flex rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white"
+            >
               Ask live rules questions
             </Link>
-            <Link href={`/games/${selectedGame.id}`} className="inline-flex rounded-full border border-board-forest/15 px-5 py-3 text-sm font-semibold text-board-pine">
+            <Link
+              href={`/games/${selectedGame.id}`}
+              className="inline-flex rounded-full border border-board-forest/15 px-5 py-3 text-sm font-semibold text-board-pine"
+            >
               Open game detail
             </Link>
           </div>
@@ -63,7 +101,9 @@ export function QuickStartExplorer({ games, initialGameId }: { games: GameRecord
           <ol className="mt-4 space-y-4">
             {selectedGame.quickStart.map((item, index) => (
               <li key={item} className="flex gap-4 rounded-2xl bg-board-canvas p-4 text-sm text-slate-600">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-board-pine text-sm font-bold text-white">{index + 1}</span>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-board-pine text-sm font-bold text-white">
+                  {index + 1}
+                </span>
                 <span>{item}</span>
               </li>
             ))}
