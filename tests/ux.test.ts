@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { describeAssistantMode, filterGames, getActiveLibraryFilters, resolveRequestedGameId } from '../src/lib/ux';
+import {
+  describeAssistantMode,
+  filterGames,
+  getActiveLibraryFilters,
+  getAssistantModeOverview,
+  getPreferredAssistantMode,
+  resolveRequestedGameId
+} from '../src/lib/ux';
 import type { GameRecord } from '../src/types';
 
 const games: GameRecord[] = [
@@ -64,6 +71,36 @@ const games: GameRecord[] = [
   }
 ];
 
+function withModeEnv(
+  nextEnv: Partial<Record<'RULESGENIE_DEMO_MODE' | 'OPENAI_API_KEY', string | undefined>>,
+  callback: () => void
+) {
+  const previous = {
+    RULESGENIE_DEMO_MODE: process.env.RULESGENIE_DEMO_MODE,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  };
+
+  for (const [key, value] of Object.entries(nextEnv)) {
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+
+  try {
+    callback();
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+}
+
 test('resolveRequestedGameId keeps supported ids intact', () => {
   assert.deepEqual(resolveRequestedGameId(games, 'wingspan'), {
     selectedGameId: 'wingspan',
@@ -74,7 +111,8 @@ test('resolveRequestedGameId keeps supported ids intact', () => {
 test('resolveRequestedGameId falls back to the first game when a shared link is invalid', () => {
   assert.deepEqual(resolveRequestedGameId(games, 'unknown-game'), {
     selectedGameId: 'azul',
-    requestedGameMissing: true
+    requestedGameMissing: true,
+    requestedGameId: 'unknown-game'
   });
 });
 
@@ -110,4 +148,29 @@ test('describeAssistantMode explains live readiness and fallback behavior', () =
   assert.match(liveReady.description, /OpenAI is ready/i);
   assert.equal(fallback.badgeLabel, 'Fallback mode');
   assert.match(fallback.description, /demo engine/i);
+});
+
+test('getPreferredAssistantMode matches demo and live runtime conditions', () => {
+  withModeEnv({ RULESGENIE_DEMO_MODE: 'false', OPENAI_API_KEY: undefined }, () => {
+    assert.equal(getPreferredAssistantMode(), 'demo');
+  });
+
+  withModeEnv({ RULESGENIE_DEMO_MODE: 'false', OPENAI_API_KEY: 'sk-test' }, () => {
+    assert.equal(getPreferredAssistantMode(), 'live');
+  });
+
+  withModeEnv({ RULESGENIE_DEMO_MODE: 'true', OPENAI_API_KEY: 'sk-test' }, () => {
+    assert.equal(getPreferredAssistantMode(), 'demo');
+  });
+});
+
+test('getAssistantModeOverview returns consistent copy for home and health surfaces', () => {
+  const demoOverview = getAssistantModeOverview('demo');
+  const liveOverview = getAssistantModeOverview('live');
+
+  assert.match(demoOverview.footerNote, /without API keys/i);
+  assert.equal(demoOverview.statsValue, 'Demo');
+  assert.match(liveOverview.launchBadge, /OpenAI connected/i);
+  assert.equal(liveOverview.statsValue, 'Live ready');
+  assert.match(liveOverview.healthSummary, /OpenAI is configured/i);
 });
