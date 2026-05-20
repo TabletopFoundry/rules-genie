@@ -32,7 +32,23 @@ export function QuickStartExplorer({
     return (
       <div className="rounded-[32px] border border-dashed border-board-forest/20 bg-board-canvas p-10 text-center">
         <p className="text-lg font-semibold text-board-pine">No supported games available</p>
-        <p className="mt-2 text-sm text-slate-600">Check back later or contact support.</p>
+        <p className="mt-2 text-sm text-slate-600">
+          The catalog is empty right now, but you can return home or reopen the library later.
+        </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/"
+            className="inline-flex rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
+          >
+            Go home
+          </Link>
+          <Link
+            href="/games"
+            className="inline-flex rounded-full border border-board-forest/15 px-5 py-3 text-sm font-semibold text-board-pine transition hover:bg-board-mist focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
+          >
+            Browse supported games
+          </Link>
+        </div>
       </div>
     );
   }
@@ -41,8 +57,9 @@ export function QuickStartExplorer({
     <div className="space-y-8">
       {initialSelection.requestedGameMissing ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="status">
-          That quick-start link pointed to an unsupported title, so RulesGenie opened{' '}
-          <span className="font-semibold">{selectedGame.name}</span> instead.
+          That quick-start link asked for{' '}
+          <span className="font-semibold">“{initialSelection.requestedGameId}”</span>, but it is not in the supported
+          catalog, so RulesGenie opened <span className="font-semibold">{selectedGame.name}</span> instead.
           <Link href="/games" className="ml-2 font-semibold text-amber-900 underline underline-offset-4">
             Browse supported games
           </Link>

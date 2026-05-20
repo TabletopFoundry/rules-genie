@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Loading() {
   return (
     <div className="grid min-h-[60vh] place-items-center" aria-live="polite" role="status">
@@ -9,6 +11,20 @@ export default function Loading() {
           <span className="h-3 w-3 animate-bounce rounded-full bg-board-pine [animation-delay:0ms]" />
           <span className="h-3 w-3 animate-bounce rounded-full bg-board-gold [animation-delay:150ms]" />
           <span className="h-3 w-3 animate-bounce rounded-full bg-board-berry [animation-delay:300ms]" />
+        </div>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/games"
+            className="inline-flex rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90"
+          >
+            Browse supported games
+          </Link>
+          <Link
+            href="/quick-start"
+            className="inline-flex rounded-full border border-board-forest/15 px-5 py-3 text-sm font-semibold text-board-pine transition hover:bg-board-canvas"
+          >
+            Open quick-start
+          </Link>
         </div>
       </div>
     </div>
