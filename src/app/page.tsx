@@ -6,6 +6,7 @@ import { FeatureCard } from '@/components/feature-card';
 import { GameCard } from '@/components/game-card';
 import { SectionHeading } from '@/components/section-heading';
 import { getCollectionGameIds, getFeaturedGames, listGames } from '@/lib/db';
+import { getAssistantModeOverview, getPreferredAssistantMode } from '@/lib/ux';
 
 export const metadata: Metadata = {
   title: 'RulesGenie — AI Board Game Rules Assistant',
@@ -21,12 +22,13 @@ export default function HomePage() {
   const featuredGames = getFeaturedGames();
   const allGames = listGames();
   const collectionIds = Array.from(getCollectionGameIds());
+  const modeOverview = getAssistantModeOverview(getPreferredAssistantMode());
 
   return (
     <div className="space-y-16 pb-10">
       <section className="grid gap-8 overflow-hidden rounded-[40px] border border-board-forest/10 bg-white px-6 py-10 shadow-card lg:grid-cols-[1.2fr_0.8fr] lg:px-10 lg:py-14">
         <div className="space-y-6">
-          <span className="inline-flex rounded-full bg-board-gold/20 px-4 py-2 text-sm font-semibold text-board-pine">MVP ready · mock mode included</span>
+          <span className="inline-flex rounded-full bg-board-gold/20 px-4 py-2 text-sm font-semibold text-board-pine">{modeOverview.launchBadge}</span>
           <div className="space-y-4">
             <h1 className="max-w-3xl text-5xl font-black leading-tight tracking-tight text-board-pine sm:text-6xl">
               Stop flipping through rulebooks. Get the ruling in seconds.
@@ -49,8 +51,9 @@ export default function HomePage() {
               <p className="mt-2 text-3xl font-black text-board-pine">{allGames.length}</p>
             </div>
             <div className="rounded-3xl bg-board-canvas p-4">
-              <p className="text-sm text-slate-500">Works without keys</p>
-              <p className="mt-2 text-3xl font-black text-board-pine">Demo</p>
+              <p className="text-sm text-slate-500">{modeOverview.statsLabel}</p>
+              <p className="mt-2 text-3xl font-black text-board-pine">{modeOverview.statsValue}</p>
+              <p className="mt-2 text-xs leading-5 text-slate-500">{modeOverview.statsDescription}</p>
             </div>
             <div className="rounded-3xl bg-board-canvas p-4">
               <p className="text-sm text-slate-500">Quick-start lessons</p>
@@ -71,7 +74,7 @@ export default function HomePage() {
           <div className="rounded-[32px] border border-board-forest/10 bg-board-canvas p-6 text-board-pine">
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-board-forest">Try this first</p>
             <p className="mt-3 text-2xl font-bold">“Can I draw a face-up locomotive first?”</p>
-            <p className="mt-3 text-sm text-slate-600">RulesGenie will answer instantly in demo mode, then remember the exchange in your session history.</p>
+            <p className="mt-3 text-sm text-slate-600">{modeOverview.sampleQuestionDescription}</p>
           </div>
         </div>
       </section>

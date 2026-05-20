@@ -13,6 +13,42 @@ export type LibraryFilters = {
 
 type GameSelectionItem = Pick<GameRecord, 'id'>;
 
+export function getPreferredAssistantMode(): AssistantModePreference {
+  return process.env.RULESGENIE_DEMO_MODE === 'false' && Boolean(process.env.OPENAI_API_KEY?.trim()) ? 'live' : 'demo';
+}
+
+export function getAssistantModeOverview(preferredMode: AssistantModePreference) {
+  if (preferredMode === 'live') {
+    return {
+      launchBadge: 'Live ready · OpenAI connected',
+      statsLabel: 'Assistant status',
+      statsValue: 'Live ready',
+      statsDescription: 'OpenAI is connected for live rulings grounded in the same curated RulesGenie context.',
+      sampleQuestionDescription:
+        'RulesGenie will answer with live AI first, then keep the exchange in your local session history.',
+      askDescription:
+        'Live mode is ready. RulesGenie will use OpenAI for new questions, then fall back to demo answers only if a live request fails.',
+      footerNote:
+        'Live mode is active. If OpenAI becomes unavailable, RulesGenie falls back to demo answers and tells you.',
+      healthSummary: 'OpenAI is configured for live responses.'
+    };
+  }
+
+  return {
+    launchBadge: 'Demo ready · mock mode included',
+    statsLabel: 'Works without keys',
+    statsValue: 'Demo',
+    statsDescription: 'Demo answers work without API keys while preserving citations, bookmarks, and local session history.',
+    sampleQuestionDescription:
+      'RulesGenie will answer instantly in demo mode, then remember the exchange in your local session history.',
+    askDescription:
+      'Demo mode works out of the box. Add an OpenAI key later if you want live production-style generation grounded in the same curated context.',
+    footerNote:
+      'Demo mode works without API keys. Add OpenAI credentials later if you want live production-style answers.',
+    healthSummary: 'Demo answers are active because demo mode is enabled or no OpenAI key is configured.'
+  };
+}
+
 export function resolveRequestedGameId<T extends GameSelectionItem>(games: T[], requestedGameId?: string) {
   const fallbackGameId = games[0]?.id ?? '';
 
@@ -24,7 +60,7 @@ export function resolveRequestedGameId<T extends GameSelectionItem>(games: T[], 
     return { selectedGameId: requestedGameId, requestedGameMissing: false };
   }
 
-  return { selectedGameId: fallbackGameId, requestedGameMissing: true };
+  return { selectedGameId: fallbackGameId, requestedGameMissing: true, requestedGameId };
 }
 
 export function filterGames(games: GameRecord[], filters: LibraryFilters) {

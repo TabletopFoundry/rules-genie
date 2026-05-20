@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from 'next/font/google';
 
 import '@/app/globals.css';
 import { SiteHeader } from '@/components/site-header';
+import { getAssistantModeOverview, getPreferredAssistantMode } from '@/lib/ux';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-heading' });
@@ -30,6 +31,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const modeOverview = getAssistantModeOverview(getPreferredAssistantMode());
+
   return (
     <html lang="en">
       <body className={`${inter.variable} ${spaceGrotesk.variable} bg-board-canvas text-slate-900`}>
@@ -45,7 +48,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <footer className="border-t border-board-forest/10 bg-white/70">
             <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
               <p>RulesGenie MVP · Built for fast mid-game rulings.</p>
-              <p>Demo mode works without API keys. Add OpenAI credentials for production-style answers.</p>
+              <p>{modeOverview.footerNote}</p>
             </div>
           </footer>
         </div>

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { ChatInterface } from '@/components/chat-interface';
 import { SectionHeading } from '@/components/section-heading';
 import { listGames } from '@/lib/db';
-import type { AssistantModePreference } from '@/lib/ux';
+import { getAssistantModeOverview, getPreferredAssistantMode } from '@/lib/ux';
 
 export const metadata: Metadata = {
   title: 'Ask Rules — RulesGenie',
@@ -28,15 +28,15 @@ export default async function AskPage({
   const initialGameId = typeof params.game === 'string' ? params.game : undefined;
   const initialQuestion = typeof params.q === 'string' ? params.q : undefined;
   const games = listGames();
-  const preferredMode: AssistantModePreference =
-    process.env.RULESGENIE_DEMO_MODE === 'false' && process.env.OPENAI_API_KEY ? 'live' : 'demo';
+  const preferredMode = getPreferredAssistantMode();
+  const modeOverview = getAssistantModeOverview(preferredMode);
 
   return (
     <div className="space-y-8 pb-8">
       <SectionHeading
         eyebrow="Rules assistant"
         title="Ask a rules question and keep the game moving"
-        description="Demo mode works out of the box. Add an OpenAI key later if you want production-style generation grounded in the same curated context."
+        description={modeOverview.askDescription}
       />
       <ChatInterface
         games={games}

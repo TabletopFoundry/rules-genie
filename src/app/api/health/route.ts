@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { getDb } from '@/lib/db/connection';
+import { getAssistantModeOverview, getPreferredAssistantMode } from '@/lib/ux';
 
 export const runtime = 'nodejs';
 
@@ -20,6 +21,8 @@ export function GET() {
     const db = getDb();
     const row = db.prepare('SELECT COUNT(*) AS count FROM games').get() as { count: number } | undefined;
     const gameCount = row?.count ?? 0;
+    const preferredMode = getPreferredAssistantMode();
+    const modeOverview = getAssistantModeOverview(preferredMode);
 
     return NextResponse.json(
       {
@@ -27,7 +30,8 @@ export function GET() {
         timestamp: new Date().toISOString(),
         version: process.env.npm_package_version ?? '0.1.0',
         database: { connected: true, games: gameCount },
-        mode: process.env.RULESGENIE_DEMO_MODE !== 'false' ? 'demo' : 'live',
+        mode: preferredMode,
+        modeDescription: modeOverview.healthSummary,
         uptime: process.uptime()
       },
       {
