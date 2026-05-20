@@ -2,102 +2,100 @@
 
 ## Summary
 
-- **Audit setup:** reviewed `package.json`, all user-facing routes under `src/app/**/*`, the shared shell and interactive components under `src/components/**/*`, supporting helpers in `src/lib/ux.ts`, and the current regression suite in `tests/ux.test.ts`.
+- **Audit setup:** reviewed the current user-facing routes in `src/app/**/*`, shared UI in `src/components/**/*`, helper logic in `src/lib/ux.ts`, and the regression suite in `tests/ux.test.ts`.
 - **Instruction files:** no `AGENTS.md` or `CLAUDE.md` files exist inside `rules-genie/`, so this pass followed the repository state and the user brief directly.
-- **Coverage snapshot:** the current product still covers the core MVP flows across home, ask, library, game detail, quick-start, dashboard, and the global shell (`src/app/page.tsx`, `src/app/ask/page.tsx`, `src/app/games/**/*`, `src/app/quick-start/page.tsx`, `src/app/dashboard/page.tsx`, `src/app/layout.tsx`, `src/components/site-header.tsx`).
-- **Baseline validation before changes:** `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` all passed in the starting state of this audit.
-- **Actionable findings from this pass:** four meaningful UX gaps remain in the current codebase: ask-flow failures still dead-end without retry actions, stale shared links silently swap users into the first game, dashboard mutations lock the whole surface behind one pending state, and recovery states still lack route-aware refresh/context (`src/components/hooks/use-conversation.ts`, `src/components/conversation-thread.tsx`, `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `src/components/dashboard-client.tsx`, `src/app/loading.tsx`, `src/app/games/[id]/page.tsx`, `src/app/games/[id]/not-found.tsx`).
+- **Baseline validation before changes:** `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` all passed before this pass started.
+- **Coverage snapshot:** the MVP still covers the home, ask, library, detail, quick-start, dashboard, and recovery flows (`src/app/page.tsx`, `src/app/ask/page.tsx`, `src/app/games/**/*`, `src/app/quick-start/page.tsx`, `src/app/dashboard/page.tsx`, `src/app/loading.tsx`, `src/app/error.tsx`).
+- **Fresh findings from this pass:** four UX gaps remain in the current build: the ask surface briefly shows the wrong game's history while the selected game changes, ask/quick-start selection state is not reflected back into the URL, players cannot cancel an in-flight rules request, and the dashboard add flow dead-ends once every supported game is already saved (`src/components/chat-interface.tsx`, `src/components/hooks/use-conversation.ts`, `src/components/hooks/use-rules-session.ts`, `src/components/quick-start-explorer.tsx`, `src/components/question-input.tsx`, `src/components/dashboard-client.tsx`).
 
-## Phase 1 — Feature Inventory by domain
+## Phase 1 — Feature inventory by domain
 
 ### 1. App shell, navigation, and recovery
 
-- Root shell, metadata, skip link, and footer (`src/app/layout.tsx`)
+- Shared layout, metadata, skip link, and footer (`src/app/layout.tsx`)
 - Desktop navigation and mobile drawer (`src/components/site-header.tsx`)
-- Global loading, error, and 404 handling (`src/app/loading.tsx`, `src/app/error.tsx`, `src/app/not-found.tsx`, `src/app/games/[id]/not-found.tsx`)
+- Loading, error, and 404 recovery surfaces (`src/app/loading.tsx`, `src/app/error.tsx`, `src/app/not-found.tsx`, `src/app/games/[id]/not-found.tsx`)
 
 ### 2. Rules assistant
 
-- `/ask` route with `?game=` and `?q=` deep links (`src/app/ask/page.tsx`)
-- Game selection, session memory messaging, example prompts, and quick-start reminders (`src/components/chat-interface.tsx`)
-- Conversation transcript, citations, confidence, bookmarks, and feedback (`src/components/conversation-thread.tsx`, `src/components/bookmark-toggle.tsx`, `src/components/feedback-controls.tsx`, `src/components/citation-list.tsx`)
-- Question composer and submission shortcuts (`src/components/question-input.tsx`)
-- Session persistence and ask API (`src/components/hooks/use-conversation.ts`, `src/components/hooks/use-rules-session.ts`, `src/app/api/ask/route.ts`, `src/app/api/session/route.ts`)
+- `/ask` route with `?game=` and `?q=` entry points (`src/app/ask/page.tsx`)
+- Assistant shell, game selection, local session messaging, and example prompts (`src/components/chat-interface.tsx`)
+- Conversation transcript, citations, bookmarks, and answer feedback (`src/components/conversation-thread.tsx`, `src/components/citation-list.tsx`, `src/components/bookmark-toggle.tsx`, `src/components/feedback-controls.tsx`)
+- Composer, submit shortcut, and loading state (`src/components/question-input.tsx`)
+- Session hydration and ask/history requests (`src/components/hooks/use-conversation.ts`, `src/components/hooks/use-rules-session.ts`, `src/app/api/ask/route.ts`, `src/app/api/session/route.ts`)
 
 ### 3. Discovery and game detail
 
-- Homepage hero, feature teasers, and featured catalog (`src/app/page.tsx`, `src/components/feature-card.tsx`, `src/components/game-card.tsx`)
-- Searchable/filterable library (`src/app/games/page.tsx`, `src/components/library-browser.tsx`)
-- Game detail pages with mechanics, highlights, quick-start summary, example questions, and collection actions (`src/app/games/[id]/page.tsx`, `src/components/collection-toggle.tsx`)
+- Home hero, feature cards, and featured titles (`src/app/page.tsx`, `src/components/feature-card.tsx`, `src/components/game-card.tsx`)
+- Searchable library with collection entry points (`src/app/games/page.tsx`, `src/components/library-browser.tsx`, `src/components/collection-toggle.tsx`)
+- Game detail surfaces with quick-start and ask CTAs (`src/app/games/[id]/page.tsx`)
 
 ### 4. Quick-start and teaching
 
-- `/quick-start` route and deep-link selection (`src/app/quick-start/page.tsx`, `src/components/quick-start-explorer.tsx`)
-- Cross-links back into ask/detail flows (`src/components/quick-start-explorer.tsx`, `src/app/games/[id]/page.tsx`)
+- `/quick-start` route and shared-link selection (`src/app/quick-start/page.tsx`, `src/components/quick-start-explorer.tsx`)
+- Teaching summary, setup guide, and cross-links back to ask/detail flows (`src/components/quick-start-explorer.tsx`, `src/app/games/[id]/page.tsx`)
 
-### 5. Dashboard, persistence, and platform safety nets
+### 5. Dashboard, persistence, and safety nets
 
-- Dashboard profile, collection, recent questions, and saved answers (`src/app/dashboard/page.tsx`, `src/components/dashboard-client.tsx`)
-- Collection/bookmark mutation endpoints (`src/app/api/collection/route.ts`, `src/app/api/bookmarks/route.ts`)
-- Runtime flags plus current helper-level regression coverage (`src/lib/ux.ts`, `tests/ux.test.ts`, `src/app/api/health/route.ts`)
+- Dashboard profile, collection, recent questions, and bookmarks (`src/app/dashboard/page.tsx`, `src/components/dashboard-client.tsx`)
+- Bookmark/collection persistence endpoints (`src/app/api/bookmarks/route.ts`, `src/app/api/collection/route.ts`)
+- Helper-level UX copy and regression coverage (`src/lib/ux.ts`, `tests/ux.test.ts`)
 
-## Phase 2 — UI Coverage table
+## Phase 2 — UI coverage table
 
 | Surface | Domain | Status | Concrete coverage |
 | --- | --- | --- | --- |
-| Global shell, skip link, footer | App shell | [COVERED] | `src/app/layout.tsx` provides the shared shell, skip link, and mode-aware footer copy. |
-| Desktop and mobile navigation | App shell | [COVERED] | `src/components/site-header.tsx` exposes active-route context, a close affordance, and focus management for the drawer. |
-| Global loading and general 404/error routes | App shell | [PARTIAL] | `src/app/loading.tsx`, `src/app/error.tsx`, and `src/app/not-found.tsx` provide escape hatches, but `src/app/loading.tsx` still lacks a direct refresh action. |
-| Homepage entry flow | Discovery | [COVERED] | `src/app/page.tsx` links directly into `/ask` and `/games`, with live/demo mode surfaced via `src/lib/ux.ts`. |
-| Library search and filters | Discovery | [COVERED] | `src/components/library-browser.tsx` exposes search, filters, active chips, result summary, and reset controls. |
-| Game detail CTA flow | Discovery | [PARTIAL] | `src/app/games/[id]/page.tsx` links back into `/ask`, `/quick-start`, and collection management, but missing-game recovery still drops to a generic fallback. |
-| Ask route deep links | Rules assistant | [PARTIAL] | `src/app/ask/page.tsx` and `src/components/chat-interface.tsx` accept `?game=` links, but stale game ids still silently open the first catalog title. |
-| Conversation recovery | Rules assistant | [PARTIAL] | `src/components/hooks/use-conversation.ts` sets load/ask errors, yet `src/components/conversation-thread.tsx` only renders the message with no retry action. |
-| Bookmarking and answer feedback | Rules assistant | [COVERED] | `src/components/bookmark-toggle.tsx` and `src/components/feedback-controls.tsx` provide visible mutation feedback in the thread. |
-| Quick-start deep links | Quick-start | [PARTIAL] | `src/components/quick-start-explorer.tsx` warns when a deep link is stale, but still opens the first supported game automatically. |
-| Dashboard collection and saved answers | Dashboard | [PARTIAL] | `src/components/dashboard-client.tsx` now has success/error feedback, but one shared transition state still blocks all collection and bookmark controls together. |
-| Regression safety net | Platform | [PARTIAL] | `tests/ux.test.ts` covers helper logic in `src/lib/ux.ts`, but does not yet lock the new recovery flows or pending-state rules. |
+| Global shell and recovery scaffolding | App shell | [COVERED] | `src/app/layout.tsx`, `src/app/loading.tsx`, `src/app/error.tsx`, and `src/app/not-found.tsx` provide the shared shell plus loading/error/404 recovery paths. |
+| Desktop/mobile navigation | App shell | [COVERED] | `src/components/site-header.tsx` includes active-route state, a mobile drawer, escape handling, and focus trapping. |
+| Home and library discovery | Discovery | [COVERED] | `src/app/page.tsx`, `src/app/games/page.tsx`, and `src/components/library-browser.tsx` cover the entry flow, browsing, filters, and reset states. |
+| Game detail flow | Discovery | [COVERED] | `src/app/games/[id]/page.tsx` provides quick-start, ask, and collection CTAs with mechanics/highlights/setup content. |
+| Ask route deep links | Rules assistant | [PARTIAL] | `src/app/ask/page.tsx` accepts `?game=` and `?q=`, but `src/components/chat-interface.tsx` does not write the current selection back to the URL or clear consumed question params. |
+| Ask conversation state | Rules assistant | [PARTIAL] | `src/components/hooks/use-conversation.ts` and `src/components/hooks/use-rules-session.ts` hydrate local history, but the thread is not cleared immediately when the selected game changes. |
+| Ask request control | Rules assistant | [PARTIAL] | `src/components/question-input.tsx` only exposes submit while `src/components/hooks/use-conversation.ts` keeps an internal abort path that the player cannot trigger. |
+| Quick-start shared selection | Quick-start | [PARTIAL] | `src/components/quick-start-explorer.tsx` lets players change the supported game locally, but the URL stays frozen on the initial state. |
+| Dashboard collection management | Dashboard | [PARTIAL] | `src/components/dashboard-client.tsx` supports add/remove flows, but the add section gives no explanation once `addableGames` is empty. |
+| Regression safety net | Platform | [PARTIAL] | `tests/ux.test.ts` covers helper copy in `src/lib/ux.ts`, but does not yet lock the new URL-state and collection-availability helpers needed for this pass. |
 
-## Phase 3 — UX Quality severities
+## Phase 3 — UX quality severities
 
 | Severity | Finding | Evidence | User impact |
 | --- | --- | --- | --- |
-| High | Ask-flow failures still strand the player after a failed history load or answer request. | `src/components/hooks/use-conversation.ts` records history-load and answer errors, but `src/components/conversation-thread.tsx` renders only a passive alert with no retry affordance. | Mid-game players can lose momentum and must manually retype or refresh instead of recovering in place. |
-| High | Invalid shared ask/quick-start links silently switch users into the first supported game. | `src/components/chat-interface.tsx` and `src/components/quick-start-explorer.tsx` both call `resolveRequestedGameId(...)`, then immediately open `games[0]` when the requested id is missing. | A stale shared link can put someone into the wrong rules context without an explicit choice, which undermines trust in the answer surface. |
-| Medium | Dashboard actions still use one global pending state. | `src/components/dashboard-client.tsx` shares a single `useTransition()` state across adding a game, removing a collection entry, and removing a bookmark. | One slow request freezes unrelated controls, making the dashboard feel stuck and raising the cost of recovery if a request hangs. |
-| Medium | Recovery states still miss route-aware refresh/context. | `src/app/loading.tsx` offers alternate links but no direct reload option, and `src/app/games/[id]/page.tsx` still relies on the generic `src/app/games/[id]/not-found.tsx` fallback for missing titles. | Slow or stale routes produce avoidable context loss when users most need a fast way back to the current task. |
+| High | Switching games in the ask flow can momentarily show the previous game's rulings under the new heading. | `src/components/chat-interface.tsx` swaps `selectedGame` immediately, while `src/components/hooks/use-rules-session.ts` updates `sessionId` in an effect and `src/components/hooks/use-conversation.ts` keeps prior `history`/`suggestions` until the new load completes. | Players can read or act on the wrong rules context during the exact moment they are trying to pivot to another title. |
+| High | Ask and quick-start state is not shareable/persistent once the player changes the selected game, and deep-linked ask prompts can replay on refresh. | `src/components/chat-interface.tsx` and `src/components/quick-start-explorer.tsx` keep selection in local state only, and `src/components/chat-interface.tsx` never clears the one-time `q` param after it has been consumed. | Refreshing, copying the URL, or using back/forward can reopen the wrong game or rerun a stale question. |
+| Medium | Players cannot stop a slow ask request even though the data layer already supports aborting it. | `src/components/hooks/use-conversation.ts` has `abortPendingAsk()`/`cancelPendingAsk()`, but `src/components/question-input.tsx` only renders a disabled submit state during loading. | Mid-game users are forced to wait for the timeout instead of bailing out and trying a shorter or better-scoped question. |
+| Medium | The dashboard add flow becomes a silent dead end after every supported title is already saved. | `src/components/dashboard-client.tsx` always renders the add-game select/button, even when `addableGames.length === 0`, which leaves only the placeholder option and a disabled action. | Returning users get no confirmation that the collection is already complete and no next step from that section. |
 
-## Phase 4 — Remediation Plan with effort
+## Phase 4 — Remediation plan with effort
 
 | Remediation | Effort | Target paths | Status |
 | --- | --- | --- | --- |
-| Add explicit retry actions for conversation history and failed answer requests. | S | `src/components/hooks/use-conversation.ts`, `src/components/conversation-thread.tsx`, `src/components/chat-interface.tsx`, `tests/ux.test.ts` | Done |
-| Stop auto-selecting the first game when a shared ask/quick-start link is stale; require an explicit recovery choice. | S | `src/lib/ux.ts`, `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `tests/ux.test.ts` | Done |
-| Scope dashboard pending states per action so one mutation does not freeze the whole dashboard. | S | `src/components/dashboard-client.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Done |
-| Strengthen route-aware recovery for slow loads and missing game detail pages. | S | `src/app/loading.tsx`, `src/app/games/[id]/page.tsx`, `src/app/games/[id]/not-found.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Done |
+| Reset/scoped ask conversation state as soon as the selected game changes. | S | `src/components/chat-interface.tsx`, `src/components/hooks/use-conversation.ts`, `src/components/hooks/use-rules-session.ts` | Pending |
+| Sync ask and quick-start game selection back into the URL and clear stale ask prompt params after use. | S | `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Pending |
+| Expose a visible cancel control for in-flight ask requests. | S | `src/components/question-input.tsx`, `src/components/hooks/use-conversation.ts` | Pending |
+| Add explicit guidance when the dashboard collection already contains every supported game. | S | `src/components/dashboard-client.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Pending |
 
-## Phase 5 — Priority Stack Rank
+## Phase 5 — Priority stack rank
 
 ### Quick wins
 
 | Rank | Item | Effort | Why it is prioritized |
 | --- | --- | --- | --- |
-| 1 | Add ask-flow retry actions | S | It removes the most acute dead end from the core product loop and protects mid-game usage. |
-| 2 | Fix stale shared-link selection | S | It restores trust in shared entry points by preventing silent game swaps. |
-| 3 | Split dashboard pending states | S | It improves perceived responsiveness across a high-value return surface without backend changes. |
-| 4 | Strengthen route-aware recovery | S | It keeps players closer to their current task when a route is slow or a link is stale. |
+| 1 | Scope conversation state on game switch | S | It removes the highest-risk wrong-context failure from the core ask workflow. |
+| 2 | Sync URL state for ask and quick-start | S | It restores trustworthy refresh/share behavior across the most-used entry points. |
+| 3 | Add ask-request cancellation | S | It gives players an immediate escape hatch when a slow answer is blocking play. |
+| 4 | Explain the full-collection dashboard state | S | It removes a small but visible dead end on a repeat-visit surface. |
 
 ### Full stack rank
 
-1. Add ask-flow retry actions (`src/components/hooks/use-conversation.ts`, `src/components/conversation-thread.tsx`, `src/components/chat-interface.tsx`)
-2. Fix stale shared-link selection (`src/lib/ux.ts`, `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`)
-3. Split dashboard pending states (`src/components/dashboard-client.tsx`, `src/lib/ux.ts`)
-4. Strengthen route-aware recovery (`src/app/loading.tsx`, `src/app/games/[id]/page.tsx`, `src/app/games/[id]/not-found.tsx`)
+1. Scope conversation state on ask game switch (`src/components/chat-interface.tsx`, `src/components/hooks/use-conversation.ts`, `src/components/hooks/use-rules-session.ts`)
+2. Sync ask and quick-start URL state (`src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `src/lib/ux.ts`)
+3. Add ask-request cancellation (`src/components/question-input.tsx`, `src/components/hooks/use-conversation.ts`)
+4. Explain the dashboard full-collection state (`src/components/dashboard-client.tsx`, `src/lib/ux.ts`)
 
 ## Implementation Status
 
-- Added explicit retry actions for conversation history and failed answer requests, plus helper coverage for the new recovery copy (`src/components/hooks/use-conversation.ts`, `src/components/conversation-thread.tsx`, `src/components/chat-interface.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts`).
-- Stopped stale ask and quick-start links from silently defaulting to the first catalog title by requiring an explicit supported-game pick (`src/lib/ux.ts`, `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `src/components/hooks/use-rules-session.ts`, `tests/ux.test.ts`).
-- Scoped dashboard pending states per action so add/remove flows no longer freeze unrelated controls (`src/components/dashboard-client.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts`).
-- Added a route-aware refresh action to the global loading screen and contextual missing-game recovery paths that keep users inside the main ask/library/quick-start flows (`src/components/refresh-page-button.tsx`, `src/app/loading.tsx`, `src/app/games/[id]/page.tsx`, `src/app/games/[id]/not-found.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts`).
-- Final validation passed: `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build`.
+- Pending — Scope conversation state on ask game switch.
+- Pending — Sync ask and quick-start URL state.
+- Pending — Add ask-request cancellation.
+- Pending — Explain the dashboard full-collection state.
+- Pending — Re-run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` after the remediations land.
