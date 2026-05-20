@@ -22,6 +22,7 @@ Thumbs.db
 # Build
 tsconfig.tsbuildinfo
 next-env.d.ts
+.test-dist/
 
 # Debug
 npm-debug.log*
