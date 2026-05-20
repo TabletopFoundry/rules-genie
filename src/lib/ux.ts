@@ -11,6 +11,8 @@ export type LibraryFilters = {
   players: LibraryPlayersFilter;
 };
 
+export type ConversationErrorKind = 'history' | 'ask';
+
 type GameSelectionItem = Pick<GameRecord, 'id'>;
 
 export function getPreferredAssistantMode(): AssistantModePreference {
@@ -61,6 +63,24 @@ export function resolveRequestedGameId<T extends GameSelectionItem>(games: T[], 
   }
 
   return { selectedGameId: fallbackGameId, requestedGameMissing: true, requestedGameId };
+}
+
+export function getConversationErrorAction(kind: ConversationErrorKind, prompt?: string) {
+  if (kind === 'history') {
+    return {
+      label: 'Reload conversation',
+      hint: 'Refresh this game\'s saved rulings without leaving the table.'
+    };
+  }
+
+  const trimmedPrompt = prompt?.trim();
+
+  return {
+    label: 'Retry last question',
+    hint: trimmedPrompt
+      ? `Send “${trimmedPrompt}” again without retyping it.`
+      : 'Send the last rules question again without retyping it.'
+  };
 }
 
 export function filterGames(games: GameRecord[], filters: LibraryFilters) {

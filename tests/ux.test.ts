@@ -6,6 +6,7 @@ import {
   filterGames,
   getActiveLibraryFilters,
   getAssistantModeOverview,
+  getConversationErrorAction,
   getPreferredAssistantMode,
   resolveRequestedGameId
 } from '../src/lib/ux';
@@ -173,4 +174,19 @@ test('getAssistantModeOverview returns consistent copy for home and health surfa
   assert.match(liveOverview.launchBadge, /OpenAI connected/i);
   assert.equal(liveOverview.statsValue, 'Live ready');
   assert.match(liveOverview.healthSummary, /OpenAI is configured/i);
+});
+
+test('getConversationErrorAction gives reload copy for history failures', () => {
+  assert.deepEqual(getConversationErrorAction('history'), {
+    label: 'Reload conversation',
+    hint: "Refresh this game's saved rulings without leaving the table."
+  });
+});
+
+test('getConversationErrorAction gives retry copy for failed questions', () => {
+  const retryAction = getConversationErrorAction('ask', 'How do ties break?');
+
+  assert.equal(retryAction.label, 'Retry last question');
+  assert.match(retryAction.hint, /How do ties break\?/);
+  assert.match(retryAction.hint, /without retyping/i);
 });

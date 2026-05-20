@@ -13,7 +13,7 @@ export function QuestionInput({
   setQuestion: (value: string) => void;
   loading: boolean;
   gameName: string;
-  onSubmit: (question?: string) => void;
+  onSubmit: (question?: string) => void | Promise<void>;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 

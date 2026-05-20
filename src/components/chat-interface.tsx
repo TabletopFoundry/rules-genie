@@ -7,7 +7,12 @@ import { ConversationThread } from '@/components/conversation-thread';
 import { useConversation } from '@/components/hooks/use-conversation';
 import { useRulesSession } from '@/components/hooks/use-rules-session';
 import { QuestionInput } from '@/components/question-input';
-import { describeAssistantMode, resolveRequestedGameId, type AssistantModePreference } from '@/lib/ux';
+import {
+  describeAssistantMode,
+  getConversationErrorAction,
+  resolveRequestedGameId,
+  type AssistantModePreference
+} from '@/lib/ux';
 import type { GameRecord } from '@/types';
 
 export function ChatInterface({
@@ -48,9 +53,12 @@ export function ChatInterface({
     loading,
     hydrating,
     error,
+    errorKind,
+    retryPrompt,
     suggestions,
     setSuggestions,
     askQuestion,
+    retryLastAction,
     resetConversation,
     initialQuestionFired
   } = useConversation(sessionId, validSelectedGameId);
@@ -78,11 +86,11 @@ export function ChatInterface({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuestion, sessionId, hydrating]);
 
-  function handleAsk(prefilledQuestion?: string) {
+  async function handleAsk(prefilledQuestion?: string) {
     const prompt = (prefilledQuestion ?? question).trim();
     if (!prompt || !selectedGame || !sessionId) return;
-    void askQuestion(prompt);
-    setQuestion('');
+    const didAsk = await askQuestion(prompt);
+    setQuestion(didAsk ? '' : prompt);
   }
 
   function handleClearSession() {
@@ -94,12 +102,13 @@ export function ChatInterface({
   function handleSuggestionClick(suggestion: string) {
     setQuestion(suggestion);
     setSuggestions([]);
-    void askQuestion(suggestion);
+    void handleAsk(suggestion);
   }
 
   const lastItem = history.length > 0 ? history[history.length - 1] : undefined;
   const lastMode = lastItem?.mode;
   const modeMeta = describeAssistantMode(preferredMode, lastMode);
+  const errorAction = error && errorKind ? getConversationErrorAction(errorKind, retryPrompt) : null;
   const savedRulingsLabel = history.length === 1 ? '1 saved ruling' : `${history.length} saved rulings`;
 
   if (!selectedGame) {
@@ -195,7 +204,7 @@ export function ChatInterface({
                 aria-label={`Ask: ${example}`}
                 onClick={() => {
                   setQuestion(example);
-                  handleAsk(example);
+                  void handleAsk(example);
                 }}
                 className="rounded-2xl border border-board-forest/10 bg-white px-3 py-3 text-left text-sm text-slate-600 transition hover:border-board-forest/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
               >
@@ -256,6 +265,9 @@ export function ChatInterface({
           hydrating={hydrating}
           loading={loading}
           error={error}
+          errorActionLabel={errorAction?.label}
+          errorActionHint={errorAction?.hint}
+          onRetry={errorAction ? retryLastAction : undefined}
           suggestions={suggestions}
           onSuggestionClick={handleSuggestionClick}
         />

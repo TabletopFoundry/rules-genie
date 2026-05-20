@@ -11,6 +11,9 @@ export function ConversationThread({
   hydrating,
   loading,
   error,
+  errorActionLabel,
+  errorActionHint,
+  onRetry,
   suggestions,
   onSuggestionClick
 }: {
@@ -18,6 +21,9 @@ export function ConversationThread({
   hydrating: boolean;
   loading: boolean;
   error: string;
+  errorActionLabel?: string | undefined;
+  errorActionHint?: string | undefined;
+  onRetry?: (() => void) | undefined;
   suggestions: string[];
   onSuggestionClick: (suggestion: string) => void;
 }) {
@@ -53,7 +59,23 @@ export function ConversationThread({
           Searching the rules reference and drafting a concise ruling…
         </div>
       ) : null}
-      {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{error}</div> : null}
+      {error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+          <p>{error}</p>
+          {errorActionLabel && onRetry ? (
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={onRetry}
+                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
+              >
+                {errorActionLabel}
+              </button>
+              {errorActionHint ? <p className="text-xs text-rose-700/80">{errorActionHint}</p> : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {suggestions.length > 0 && !loading ? (
         <div className="rounded-2xl bg-board-canvas p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Suggested follow-ups</p>
