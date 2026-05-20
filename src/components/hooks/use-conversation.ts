@@ -223,6 +223,7 @@ export function useConversation(sessionId: string, gameId: string) {
     askQuestion,
     retryLastAction,
     resetConversation,
+    cancelAskRequest: cancelPendingAsk,
     initialQuestionFired
   };
 }

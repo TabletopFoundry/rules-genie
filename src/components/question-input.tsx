@@ -7,13 +7,15 @@ export function QuestionInput({
   setQuestion,
   loading,
   gameName,
-  onSubmit
+  onSubmit,
+  onCancel
 }: {
   question: string;
   setQuestion: (value: string) => void;
   loading: boolean;
   gameName: string;
   onSubmit: (question?: string) => void | Promise<void>;
+  onCancel?: (() => void) | undefined;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -52,15 +54,30 @@ export function QuestionInput({
         className="min-h-[48px] w-full resize-none rounded-3xl border border-board-forest/10 bg-white px-4 py-3 text-sm text-slate-700 outline-none ring-board-gold transition focus-visible:ring-2"
       />
       <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-slate-500">Press Enter to send · Shift+Enter for new line</p>
-        <button
-          type="button"
-          onClick={() => onSubmit()}
-          disabled={loading || !question.trim()}
-          className="rounded-full bg-board-pine px-6 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-board-pine/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
-        >
-          {loading ? 'Answering…' : 'Ask RulesGenie'}
-        </button>
+        <p className="text-xs text-slate-500" aria-live="polite">
+          {loading
+            ? 'RulesGenie is drafting an answer. Cancel if the table needs a faster reset.'
+            : 'Press Enter to send · Shift+Enter for new line'}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {loading && onCancel ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-full border border-board-forest/15 px-5 py-3 text-sm font-semibold text-board-pine transition hover:bg-board-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
+            >
+              Cancel request
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => onSubmit()}
+            disabled={loading || !question.trim()}
+            className="rounded-full bg-board-pine px-6 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-board-pine/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
+          >
+            {loading ? 'Answering…' : 'Ask RulesGenie'}
+          </button>
+        </div>
       </div>
     </div>
   );

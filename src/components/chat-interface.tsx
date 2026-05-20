@@ -67,6 +67,7 @@ export function ChatInterface({
     askQuestion,
     retryLastAction,
     resetConversation,
+    cancelAskRequest,
     initialQuestionFired
   } = useConversation(activeSessionId, validSelectedGameId);
 
@@ -338,6 +339,7 @@ export function ChatInterface({
           loading={loading}
           gameName={selectedGame.name}
           onSubmit={handleAsk}
+          onCancel={cancelAskRequest}
         />
       </section>
     </div>
