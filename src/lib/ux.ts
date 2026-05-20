@@ -107,6 +107,20 @@ export function getConversationErrorAction(kind: ConversationErrorKind, prompt?:
   };
 }
 
+export function getCollectionAvailabilitySummary(addableCount: number, totalGames: number) {
+  if (totalGames <= 0) {
+    return 'The supported catalog is empty right now. Revisit the library when new games are added.';
+  }
+
+  if (addableCount <= 0) {
+    return 'Your collection already includes every supported game in the current catalog.';
+  }
+
+  return addableCount === 1
+    ? '1 more supported game is ready to add.'
+    : `${addableCount} more supported games are ready to add.`;
+}
+
 export function getCollectionPendingSummary(addingGameName?: string, removingCount = 0) {
   if (addingGameName) {
     return `Adding ${addingGameName} to your collection…`;

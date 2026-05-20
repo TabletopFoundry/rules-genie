@@ -8,6 +8,7 @@ import {
   getActiveLibraryFilters,
   getAssistantModeOverview,
   getBookmarkPendingSummary,
+  getCollectionAvailabilitySummary,
   getCollectionPendingSummary,
   getConversationErrorAction,
   getLoadingRecoveryCopy,
@@ -215,6 +216,14 @@ test('getConversationErrorAction gives retry copy for failed questions', () => {
   assert.equal(retryAction.label, 'Retry last question');
   assert.match(retryAction.hint, /How do ties break\?/);
   assert.match(retryAction.hint, /without retyping/i);
+});
+
+test('getCollectionAvailabilitySummary explains when the collection is already complete', () => {
+  assert.equal(
+    getCollectionAvailabilitySummary(0, games.length),
+    'Your collection already includes every supported game in the current catalog.'
+  );
+  assert.equal(getCollectionAvailabilitySummary(2, games.length), '2 more supported games are ready to add.');
 });
 
 test('getCollectionPendingSummary explains add and remove progress without freezing the dashboard', () => {

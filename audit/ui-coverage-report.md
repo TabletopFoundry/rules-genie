@@ -72,7 +72,7 @@
 | Reset/scoped ask conversation state as soon as the selected game changes. | S | `src/components/chat-interface.tsx`, `src/components/hooks/use-conversation.ts`, `src/components/hooks/use-rules-session.ts` | Done |
 | Sync ask and quick-start game selection back into the URL and clear stale ask prompt params after use. | S | `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Done |
 | Expose a visible cancel control for in-flight ask requests. | S | `src/components/question-input.tsx`, `src/components/hooks/use-conversation.ts` | Done |
-| Add explicit guidance when the dashboard collection already contains every supported game. | S | `src/components/dashboard-client.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Pending |
+| Add explicit guidance when the dashboard collection already contains every supported game. | S | `src/components/dashboard-client.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Done |
 
 ## Phase 5 — Priority stack rank
 
@@ -97,5 +97,5 @@
 - Done — Scoped ask conversation state so switching games clears stale history and waits for the matching per-game session before hydrating (`src/components/chat-interface.tsx`, `src/components/hooks/use-conversation.ts`, `src/components/hooks/use-rules-session.ts`).
 - Done — Synced ask and quick-start game selection into the URL and cleared one-time ask prompt params after they were consumed (`src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts`).
 - Done — Added a visible cancel action for in-flight ask requests so players can stop a slow answer without waiting for the timeout (`src/components/question-input.tsx`, `src/components/hooks/use-conversation.ts`, `src/components/chat-interface.tsx`).
-- Pending — Explain the dashboard full-collection state.
+- Done — Added explicit full-collection guidance so the dashboard add flow explains when every supported title is already saved and points players back to the catalog (`src/components/dashboard-client.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts`).
 - Pending — Re-run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` after the remediations land.

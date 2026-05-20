@@ -8,7 +8,11 @@ import { CitationList } from '@/components/citation-list';
 import { StatusPill } from '@/components/status-pill';
 import { ToggleResponseSchema } from '@/lib/api-schemas';
 import { safeJsonParse } from '@/lib/fetch-utils';
-import { getBookmarkPendingSummary, getCollectionPendingSummary } from '@/lib/ux';
+import {
+  getBookmarkPendingSummary,
+  getCollectionAvailabilitySummary,
+  getCollectionPendingSummary
+} from '@/lib/ux';
 import { timeAgo } from '@/lib/utils';
 import type { DashboardSnapshot, GameRecord } from '@/types';
 
@@ -32,6 +36,10 @@ export function DashboardClient({
   const addableGames = useMemo(
     () => games.filter((game) => !snapshot.collection.some((owned) => owned.id === game.id)),
     [games, snapshot.collection]
+  );
+  const collectionAvailabilitySummary = useMemo(
+    () => getCollectionAvailabilitySummary(addableGames.length, games.length),
+    [addableGames.length, games.length]
   );
 
   async function toggleCollection(gameId: string) {
@@ -224,30 +232,43 @@ export function DashboardClient({
             <p className="mt-2 text-xs text-slate-500" aria-live="polite">
               {getCollectionPendingSummary(addingGameName, pendingCollectionIds.length)}
             </p>
+            <p className="mt-2 text-xs text-slate-500">{collectionAvailabilitySummary}</p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <select
-              value={selectedGameId}
-              onChange={(event) => setSelectedGameId(event.target.value)}
-              aria-label="Choose a game to add to your collection"
-              className="w-full sm:min-w-[240px] rounded-2xl border border-board-forest/10 px-4 py-3 text-sm text-slate-700 outline-none ring-board-gold transition focus:ring-2"
-            >
-              <option value="">Choose a game to add</option>
-              {addableGames.map((game) => (
-                <option key={game.id} value={game.id}>
-                  {game.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              disabled={!selectedGameId || Boolean(addingGameId)}
-              onClick={() => void handleAddGame()}
-              className="rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-board-pine/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
-            >
-              {addingGameId ? 'Adding…' : 'Add game'}
-            </button>
-          </div>
+          {addableGames.length ? (
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <select
+                value={selectedGameId}
+                onChange={(event) => setSelectedGameId(event.target.value)}
+                aria-label="Choose a game to add to your collection"
+                className="w-full sm:min-w-[240px] rounded-2xl border border-board-forest/10 px-4 py-3 text-sm text-slate-700 outline-none ring-board-gold transition focus:ring-2"
+              >
+                <option value="">Choose a game to add</option>
+                {addableGames.map((game) => (
+                  <option key={game.id} value={game.id}>
+                    {game.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={!selectedGameId || Boolean(addingGameId)}
+                onClick={() => void handleAddGame()}
+                className="rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-board-pine/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
+              >
+                {addingGameId ? 'Adding…' : 'Add game'}
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-board-canvas px-4 py-3 text-sm text-slate-600">
+              <p>Everything in the supported catalog is already saved here.</p>
+              <Link
+                href="/games"
+                className="mt-3 inline-flex rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-board-pine transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
+              >
+                Browse supported games
+              </Link>
+            </div>
+          )}
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {snapshot.collection.map((game) => (
