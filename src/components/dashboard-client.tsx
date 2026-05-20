@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ActionFeedback } from '@/components/action-feedback';
 import { CitationList } from '@/components/citation-list';
 import { StatusPill } from '@/components/status-pill';
 import { ToggleResponseSchema } from '@/lib/api-schemas';
 import { safeJsonParse } from '@/lib/fetch-utils';
+import { getBookmarkPendingSummary, getCollectionPendingSummary } from '@/lib/ux';
 import { timeAgo } from '@/lib/utils';
 import type { DashboardSnapshot, GameRecord } from '@/types';
 
@@ -20,7 +21,9 @@ export function DashboardClient({
 }) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [selectedGameId, setSelectedGameId] = useState('');
-  const [isPending, startTransition] = useTransition();
+  const [addingGameId, setAddingGameId] = useState<string | null>(null);
+  const [pendingCollectionIds, setPendingCollectionIds] = useState<string[]>([]);
+  const [pendingBookmarkIds, setPendingBookmarkIds] = useState<string[]>([]);
   const [mutationFeedback, setMutationFeedback] = useState<{
     tone: 'success' | 'error';
     message: string;
@@ -84,7 +87,6 @@ export function DashboardClient({
       const payload = ToggleResponseSchema.parse(raw);
 
       if (payload.active) {
-        // Server indicates bookmark is still active — don't remove from UI
         return;
       }
 
@@ -106,6 +108,38 @@ export function DashboardClient({
       });
     }
   }
+
+  async function handleAddGame() {
+    if (!selectedGameId) return;
+    const gameId = selectedGameId;
+    setAddingGameId(gameId);
+    try {
+      await toggleCollection(gameId);
+      setSelectedGameId('');
+    } finally {
+      setAddingGameId(null);
+    }
+  }
+
+  async function handleRemoveCollection(gameId: string) {
+    setPendingCollectionIds((current) => (current.includes(gameId) ? current : [...current, gameId]));
+    try {
+      await toggleCollection(gameId);
+    } finally {
+      setPendingCollectionIds((current) => current.filter((id) => id !== gameId));
+    }
+  }
+
+  async function handleRemoveBookmark(qaPairId: string) {
+    setPendingBookmarkIds((current) => (current.includes(qaPairId) ? current : [...current, qaPairId]));
+    try {
+      await removeBookmark(qaPairId);
+    } finally {
+      setPendingBookmarkIds((current) => current.filter((id) => id !== qaPairId));
+    }
+  }
+
+  const addingGameName = addingGameId ? games.find((game) => game.id === addingGameId)?.name : undefined;
 
   return (
     <div className="space-y-8">
@@ -187,6 +221,9 @@ export function DashboardClient({
           <div>
             <h3 className="text-2xl font-bold text-board-pine">Manage your collection</h3>
             <p className="text-sm text-slate-600">Add games you want fast access to during game night.</p>
+            <p className="mt-2 text-xs text-slate-500" aria-live="polite">
+              {getCollectionPendingSummary(addingGameName, pendingCollectionIds.length)}
+            </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <select
@@ -204,16 +241,11 @@ export function DashboardClient({
             </select>
             <button
               type="button"
-              disabled={!selectedGameId || isPending}
-              onClick={() =>
-                startTransition(async () => {
-                  await toggleCollection(selectedGameId);
-                  setSelectedGameId('');
-                })
-              }
+              disabled={!selectedGameId || Boolean(addingGameId)}
+              onClick={() => void handleAddGame()}
               className="rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-board-pine/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
             >
-              {isPending ? 'Saving…' : 'Add game'}
+              {addingGameId ? 'Adding…' : 'Add game'}
             </button>
           </div>
         </div>
@@ -233,11 +265,11 @@ export function DashboardClient({
                 <button
                   type="button"
                   aria-label={`Remove ${game.name} from collection`}
-                  disabled={isPending}
-                  onClick={() => startTransition(() => toggleCollection(game.id))}
+                  disabled={pendingCollectionIds.includes(game.id)}
+                  onClick={() => void handleRemoveCollection(game.id)}
                   className="rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-board-mist hover:text-board-pine disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
                 >
-                  {isPending ? 'Saving…' : 'Remove'}
+                  {pendingCollectionIds.includes(game.id) ? 'Removing…' : 'Remove'}
                 </button>
               </div>
             </div>
@@ -304,6 +336,9 @@ export function DashboardClient({
 
         <div className="rounded-[32px] border border-board-forest/10 bg-white p-6 shadow-card">
           <h3 className="text-2xl font-bold text-board-pine">Saved answers</h3>
+          <p className="mt-2 text-sm text-slate-600" aria-live="polite">
+            {getBookmarkPendingSummary(pendingBookmarkIds.length)}
+          </p>
           <div className="mt-5 space-y-4">
             {snapshot.bookmarks.map((item) => {
               const game = games.find((gameEntry) => gameEntry.id === item.gameId);
@@ -314,11 +349,11 @@ export function DashboardClient({
                     <button
                       type="button"
                       aria-label={`Remove bookmark for: ${item.question.slice(0, 60)}`}
-                      disabled={isPending}
-                      onClick={() => startTransition(() => removeBookmark(item.id))}
+                      disabled={pendingBookmarkIds.includes(item.id)}
+                      onClick={() => void handleRemoveBookmark(item.id)}
                       className="text-xs font-semibold text-slate-500 transition hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:rounded"
                     >
-                      {isPending ? 'Saving…' : 'Remove'}
+                      {pendingBookmarkIds.includes(item.id) ? 'Removing…' : 'Remove'}
                     </button>
                   </div>
                   <p className="mt-3 text-sm font-semibold text-board-pine">{item.question}</p>

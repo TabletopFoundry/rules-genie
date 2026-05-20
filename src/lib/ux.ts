@@ -87,6 +87,30 @@ export function getConversationErrorAction(kind: ConversationErrorKind, prompt?:
   };
 }
 
+export function getCollectionPendingSummary(addingGameName?: string, removingCount = 0) {
+  if (addingGameName) {
+    return `Adding ${addingGameName} to your collection…`;
+  }
+
+  if (removingCount > 0) {
+    return removingCount === 1
+      ? 'Removing 1 game from your collection…'
+      : `Removing ${removingCount} games from your collection…`;
+  }
+
+  return 'Choose a game to add, or remove saved titles without freezing the whole dashboard.';
+}
+
+export function getBookmarkPendingSummary(removingCount = 0) {
+  if (removingCount > 0) {
+    return removingCount === 1
+      ? 'Removing 1 saved answer…'
+      : `Removing ${removingCount} saved answers…`;
+  }
+
+  return 'Saved answers stay here until you remove them.';
+}
+
 export function filterGames(games: GameRecord[], filters: LibraryFilters) {
   const normalizedSearch = filters.search.trim().toLowerCase();
 

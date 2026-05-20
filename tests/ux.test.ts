@@ -6,6 +6,8 @@ import {
   filterGames,
   getActiveLibraryFilters,
   getAssistantModeOverview,
+  getBookmarkPendingSummary,
+  getCollectionPendingSummary,
   getConversationErrorAction,
   getPreferredAssistantMode,
   resolveRequestedGameId
@@ -196,4 +198,16 @@ test('getConversationErrorAction gives retry copy for failed questions', () => {
   assert.equal(retryAction.label, 'Retry last question');
   assert.match(retryAction.hint, /How do ties break\?/);
   assert.match(retryAction.hint, /without retyping/i);
+});
+
+test('getCollectionPendingSummary explains add and remove progress without freezing the dashboard', () => {
+  assert.equal(getCollectionPendingSummary('Wingspan', 0), 'Adding Wingspan to your collection…');
+  assert.equal(getCollectionPendingSummary(undefined, 2), 'Removing 2 games from your collection…');
+  assert.match(getCollectionPendingSummary(undefined, 0), /without freezing the whole dashboard/i);
+});
+
+test('getBookmarkPendingSummary explains saved-answer removal progress', () => {
+  assert.equal(getBookmarkPendingSummary(1), 'Removing 1 saved answer…');
+  assert.equal(getBookmarkPendingSummary(3), 'Removing 3 saved answers…');
+  assert.match(getBookmarkPendingSummary(0), /saved answers stay here/i);
 });
