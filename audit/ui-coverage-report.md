@@ -72,7 +72,7 @@
 | Remediation | Effort | Target paths | Status |
 | --- | --- | --- | --- |
 | Add explicit retry actions for conversation history and failed answer requests. | S | `src/components/hooks/use-conversation.ts`, `src/components/conversation-thread.tsx`, `src/components/chat-interface.tsx`, `tests/ux.test.ts` | Done |
-| Stop auto-selecting the first game when a shared ask/quick-start link is stale; require an explicit recovery choice. | S | `src/lib/ux.ts`, `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `tests/ux.test.ts` | Planned |
+| Stop auto-selecting the first game when a shared ask/quick-start link is stale; require an explicit recovery choice. | S | `src/lib/ux.ts`, `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `tests/ux.test.ts` | Done |
 | Scope dashboard pending states per action so one mutation does not freeze the whole dashboard. | S | `src/components/dashboard-client.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Planned |
 | Strengthen route-aware recovery for slow loads and missing game detail pages. | S | `src/app/loading.tsx`, `src/app/games/[id]/page.tsx`, `src/app/games/[id]/not-found.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Planned |
 

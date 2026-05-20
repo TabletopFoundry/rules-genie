@@ -109,11 +109,18 @@ test('resolveRequestedGameId keeps supported ids intact', () => {
   });
 });
 
-test('resolveRequestedGameId falls back to the first game when a shared link is invalid', () => {
+test('resolveRequestedGameId leaves the selection empty when a shared link is invalid', () => {
   assert.deepEqual(resolveRequestedGameId(games, 'unknown-game'), {
-    selectedGameId: 'azul',
+    selectedGameId: '',
     requestedGameMissing: true,
     requestedGameId: 'unknown-game'
+  });
+});
+
+test('resolveRequestedGameId preserves an explicit empty selection while waiting for a user pick', () => {
+  assert.deepEqual(resolveRequestedGameId(games, ''), {
+    selectedGameId: '',
+    requestedGameMissing: false
   });
 });
 

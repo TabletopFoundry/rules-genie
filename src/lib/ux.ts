@@ -54,6 +54,10 @@ export function getAssistantModeOverview(preferredMode: AssistantModePreference)
 export function resolveRequestedGameId<T extends GameSelectionItem>(games: T[], requestedGameId?: string) {
   const fallbackGameId = games[0]?.id ?? '';
 
+  if (requestedGameId === '') {
+    return { selectedGameId: '', requestedGameMissing: false };
+  }
+
   if (!requestedGameId) {
     return { selectedGameId: fallbackGameId, requestedGameMissing: false };
   }
@@ -62,7 +66,7 @@ export function resolveRequestedGameId<T extends GameSelectionItem>(games: T[], 
     return { selectedGameId: requestedGameId, requestedGameMissing: false };
   }
 
-  return { selectedGameId: fallbackGameId, requestedGameMissing: true, requestedGameId };
+  return { selectedGameId: '', requestedGameMissing: true, requestedGameId };
 }
 
 export function getConversationErrorAction(kind: ConversationErrorKind, prompt?: string) {

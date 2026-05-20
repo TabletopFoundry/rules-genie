@@ -48,7 +48,10 @@ export function useRulesSession(gameId: string) {
   const [sessionId, setSessionId] = useState('');
 
   useEffect(() => {
-    if (!gameId) return;
+    if (!gameId) {
+      setSessionId('');
+      return;
+    }
     const storageKey = makeSessionKey(gameId);
     const existing = storageGet(storageKey);
     const nextSessionId = existing ?? createSessionId();

@@ -18,7 +18,7 @@ export function QuickStartExplorer({
   const [selectedId, setSelectedId] = useState(initialSelection.selectedGameId);
   const validSelectedId = useMemo(() => resolveRequestedGameId(games, selectedId).selectedGameId, [games, selectedId]);
   const selectedGame = useMemo(
-    () => games.find((game) => game.id === validSelectedId) ?? games[0],
+    () => games.find((game) => game.id === validSelectedId),
     [games, validSelectedId]
   );
 
@@ -29,24 +29,50 @@ export function QuickStartExplorer({
   }, [selectedId, validSelectedId]);
 
   if (!selectedGame) {
+    const missingSharedGame = initialSelection.requestedGameMissing && initialSelection.requestedGameId;
+
     return (
-      <div className="rounded-[32px] border border-dashed border-board-forest/20 bg-board-canvas p-10 text-center">
-        <p className="text-lg font-semibold text-board-pine">No supported games available</p>
-        <p className="mt-2 text-sm text-slate-600">
-          The catalog is empty right now, but you can return home or reopen the library later.
+      <div className="rounded-[32px] border border-dashed border-board-forest/20 bg-white p-8 shadow-card sm:p-10">
+        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-board-forest">
+          {missingSharedGame ? 'Shared quick-start needs a new game pick' : 'No supported games available'}
         </p>
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/"
-            className="inline-flex rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
-          >
-            Go home
-          </Link>
+        <h2 className="mt-3 text-3xl font-bold text-board-pine">
+          {missingSharedGame ? 'Choose a supported game to open quick-start mode.' : 'No supported games available'}
+        </h2>
+        <p className="mt-3 max-w-2xl text-sm text-slate-600">
+          {missingSharedGame
+            ? `“${missingSharedGame}” is not in the current catalog. Pick one of the supported games below before RulesGenie shows the condensed teach guide.`
+            : 'The catalog is empty right now, but you can return home or reopen the library later.'}
+        </p>
+        {missingSharedGame ? (
+          <label className="mt-6 block text-sm font-semibold text-board-pine">
+            Pick a game
+            <select
+              value={selectedId}
+              onChange={(event) => setSelectedId(event.target.value)}
+              className="mt-2 w-full max-w-xl rounded-2xl border border-board-forest/10 px-4 py-3 text-sm text-slate-700 outline-none ring-board-gold transition focus:ring-2"
+            >
+              <option value="">Choose a supported game</option>
+              {games.map((game) => (
+                <option key={game.id} value={game.id}>
+                  {game.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/games"
-            className="inline-flex rounded-full border border-board-forest/15 px-5 py-3 text-sm font-semibold text-board-pine transition hover:bg-board-mist focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
+            className="inline-flex rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
           >
             Browse supported games
+          </Link>
+          <Link
+            href={missingSharedGame ? '/ask' : '/'}
+            className="inline-flex rounded-full border border-board-forest/15 px-5 py-3 text-sm font-semibold text-board-pine transition hover:bg-board-mist focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
+          >
+            {missingSharedGame ? 'Open rules assistant' : 'Go home'}
           </Link>
         </div>
       </div>
@@ -57,9 +83,9 @@ export function QuickStartExplorer({
     <div className="space-y-8">
       {initialSelection.requestedGameMissing ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="status">
-          That quick-start link asked for{' '}
-          <span className="font-semibold">“{initialSelection.requestedGameId}”</span>, but it is not in the supported
-          catalog, so RulesGenie opened <span className="font-semibold">{selectedGame.name}</span> instead.
+          That quick-start link asked for <span className="font-semibold">“{initialSelection.requestedGameId}”</span>,
+          which is not in the current catalog. You selected <span className="font-semibold">{selectedGame.name}</span>{' '}
+          to continue with a supported teach guide.
           <Link href="/games" className="ml-2 font-semibold text-amber-900 underline underline-offset-4">
             Browse supported games
           </Link>
