@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ConversationThread } from '@/components/conversation-thread';
 import { useConversation } from '@/components/hooks/use-conversation';
 import { useRulesSession } from '@/components/hooks/use-rules-session';
 import { QuestionInput } from '@/components/question-input';
 import {
+  buildPathWithUpdatedSearch,
   describeAssistantMode,
   getConversationErrorAction,
   resolveRequestedGameId,
@@ -30,6 +32,10 @@ export function ChatInterface({
   const [selectedGameId, setSelectedGameId] = useState(initialSelection.selectedGameId);
   const [question, setQuestion] = useState(initialQuestion ?? '');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentSearch = searchParams.toString();
 
   const validSelectedGameId = useMemo(
     () => resolveRequestedGameId(games, selectedGameId).selectedGameId,
@@ -79,20 +85,41 @@ export function ChatInterface({
     }
   }, [history.length, loading]);
 
-  useEffect(() => {
-    if (initialQuestion && activeSessionId && !hydrating && !initialQuestionFired.current) {
-      initialQuestionFired.current = true;
-      void askQuestion(initialQuestion);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSessionId, hydrating, initialQuestion]);
+  const replaceRouteState = useCallback(
+    (updates: Record<string, string | undefined>) => {
+      const nextHref = buildPathWithUpdatedSearch(pathname, currentSearch, updates);
+      const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
 
-  async function handleAsk(prefilledQuestion?: string) {
+      if (nextHref !== currentHref) {
+        router.replace(nextHref, { scroll: false });
+      }
+    },
+    [currentSearch, pathname, router]
+  );
+
+  useEffect(() => {
+    if (!validSelectedGameId) {
+      return;
+    }
+
+    replaceRouteState({ game: validSelectedGameId });
+  }, [replaceRouteState, validSelectedGameId]);
+
+  const handleAsk = useCallback(async (prefilledQuestion?: string) => {
     const prompt = (prefilledQuestion ?? question).trim();
     if (!prompt || !selectedGame || !activeSessionId) return;
     const didAsk = await askQuestion(prompt);
     setQuestion(didAsk ? '' : prompt);
-  }
+    replaceRouteState({ game: validSelectedGameId, q: undefined });
+  }, [activeSessionId, askQuestion, question, replaceRouteState, selectedGame, validSelectedGameId]);
+
+  useEffect(() => {
+    if (initialQuestion && activeSessionId && !hydrating && !initialQuestionFired.current) {
+      initialQuestionFired.current = true;
+      void handleAsk(initialQuestion);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSessionId, handleAsk, hydrating, initialQuestion]);
 
   function handleClearSession() {
     clearSession();

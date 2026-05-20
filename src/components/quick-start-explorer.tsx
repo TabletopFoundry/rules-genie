@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { GameCover } from '@/components/game-cover';
-import { resolveRequestedGameId } from '@/lib/ux';
+import { buildPathWithUpdatedSearch, resolveRequestedGameId } from '@/lib/ux';
 import type { GameRecord } from '@/types';
 
 export function QuickStartExplorer({
@@ -16,6 +17,10 @@ export function QuickStartExplorer({
 }) {
   const initialSelection = useMemo(() => resolveRequestedGameId(games, initialGameId), [games, initialGameId]);
   const [selectedId, setSelectedId] = useState(initialSelection.selectedGameId);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentSearch = searchParams.toString();
   const validSelectedId = useMemo(() => resolveRequestedGameId(games, selectedId).selectedGameId, [games, selectedId]);
   const selectedGame = useMemo(
     () => games.find((game) => game.id === validSelectedId),
@@ -27,6 +32,19 @@ export function QuickStartExplorer({
       setSelectedId(validSelectedId);
     }
   }, [selectedId, validSelectedId]);
+
+  useEffect(() => {
+    if (!validSelectedId) {
+      return;
+    }
+
+    const nextHref = buildPathWithUpdatedSearch(pathname, currentSearch, { game: validSelectedId });
+    const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
+
+    if (nextHref !== currentHref) {
+      router.replace(nextHref, { scroll: false });
+    }
+  }, [currentSearch, pathname, router, validSelectedId]);
 
   if (!selectedGame) {
     const missingSharedGame = initialSelection.requestedGameMissing && initialSelection.requestedGameId;

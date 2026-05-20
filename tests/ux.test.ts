@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  buildPathWithUpdatedSearch,
   describeAssistantMode,
   filterGames,
   getActiveLibraryFilters,
@@ -185,6 +186,20 @@ test('getAssistantModeOverview returns consistent copy for home and health surfa
   assert.match(liveOverview.launchBadge, /OpenAI connected/i);
   assert.equal(liveOverview.statsValue, 'Live ready');
   assert.match(liveOverview.healthSummary, /OpenAI is configured/i);
+});
+
+test('buildPathWithUpdatedSearch preserves unrelated params while changing the selected game', () => {
+  assert.equal(
+    buildPathWithUpdatedSearch('/ask', 'game=azul&q=Can+I+draft+again', { game: 'wingspan' }),
+    '/ask?game=wingspan&q=Can+I+draft+again'
+  );
+});
+
+test('buildPathWithUpdatedSearch removes one-time params when asked', () => {
+  assert.equal(
+    buildPathWithUpdatedSearch('/ask', 'game=azul&q=Can+I+draft+again', { game: 'azul', q: undefined }),
+    '/ask?game=azul'
+  );
 });
 
 test('getConversationErrorAction gives reload copy for history failures', () => {

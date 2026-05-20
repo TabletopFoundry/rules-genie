@@ -15,6 +15,8 @@ export type ConversationErrorKind = 'history' | 'ask';
 
 type GameSelectionItem = Pick<GameRecord, 'id'>;
 
+type SearchParamUpdates = Record<string, string | undefined>;
+
 export function getPreferredAssistantMode(): AssistantModePreference {
   return process.env.RULESGENIE_DEMO_MODE === 'false' && Boolean(process.env.OPENAI_API_KEY?.trim()) ? 'live' : 'demo';
 }
@@ -67,6 +69,24 @@ export function resolveRequestedGameId<T extends GameSelectionItem>(games: T[], 
   }
 
   return { selectedGameId: '', requestedGameMissing: true, requestedGameId };
+}
+
+export function buildPathWithUpdatedSearch(pathname: string, currentSearch: string, updates: SearchParamUpdates) {
+  const params = new URLSearchParams(currentSearch);
+
+  for (const [key, value] of Object.entries(updates)) {
+    const trimmedValue = value?.trim();
+
+    if (!trimmedValue) {
+      params.delete(key);
+      continue;
+    }
+
+    params.set(key, trimmedValue);
+  }
+
+  const nextSearch = params.toString();
+  return nextSearch ? `${pathname}?${nextSearch}` : pathname;
 }
 
 export function getConversationErrorAction(kind: ConversationErrorKind, prompt?: string) {
