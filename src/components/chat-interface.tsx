@@ -47,7 +47,8 @@ export function ChatInterface({
     [games, validSelectedGameId]
   );
 
-  const { sessionId, clearSession } = useRulesSession(validSelectedGameId);
+  const { sessionId, sessionGameId, clearSession } = useRulesSession(validSelectedGameId);
+  const activeSessionId = sessionGameId === validSelectedGameId ? sessionId : '';
   const {
     history,
     loading,
@@ -61,7 +62,7 @@ export function ChatInterface({
     retryLastAction,
     resetConversation,
     initialQuestionFired
-  } = useConversation(sessionId, validSelectedGameId);
+  } = useConversation(activeSessionId, validSelectedGameId);
 
   const conversationEndRef = useRef<HTMLDivElement>(null);
 
@@ -79,16 +80,16 @@ export function ChatInterface({
   }, [history.length, loading]);
 
   useEffect(() => {
-    if (initialQuestion && sessionId && !hydrating && !initialQuestionFired.current) {
+    if (initialQuestion && activeSessionId && !hydrating && !initialQuestionFired.current) {
       initialQuestionFired.current = true;
       void askQuestion(initialQuestion);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialQuestion, sessionId, hydrating]);
+  }, [activeSessionId, hydrating, initialQuestion]);
 
   async function handleAsk(prefilledQuestion?: string) {
     const prompt = (prefilledQuestion ?? question).trim();
-    if (!prompt || !selectedGame || !sessionId) return;
+    if (!prompt || !selectedGame || !activeSessionId) return;
     const didAsk = await askQuestion(prompt);
     setQuestion(didAsk ? '' : prompt);
   }

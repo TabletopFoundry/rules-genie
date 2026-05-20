@@ -69,7 +69,7 @@
 
 | Remediation | Effort | Target paths | Status |
 | --- | --- | --- | --- |
-| Reset/scoped ask conversation state as soon as the selected game changes. | S | `src/components/chat-interface.tsx`, `src/components/hooks/use-conversation.ts`, `src/components/hooks/use-rules-session.ts` | Pending |
+| Reset/scoped ask conversation state as soon as the selected game changes. | S | `src/components/chat-interface.tsx`, `src/components/hooks/use-conversation.ts`, `src/components/hooks/use-rules-session.ts` | Done |
 | Sync ask and quick-start game selection back into the URL and clear stale ask prompt params after use. | S | `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Pending |
 | Expose a visible cancel control for in-flight ask requests. | S | `src/components/question-input.tsx`, `src/components/hooks/use-conversation.ts` | Pending |
 | Add explicit guidance when the dashboard collection already contains every supported game. | S | `src/components/dashboard-client.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Pending |
@@ -94,7 +94,7 @@
 
 ## Implementation Status
 
-- Pending — Scope conversation state on ask game switch.
+- Done — Scoped ask conversation state so switching games clears stale history and waits for the matching per-game session before hydrating (`src/components/chat-interface.tsx`, `src/components/hooks/use-conversation.ts`, `src/components/hooks/use-rules-session.ts`).
 - Pending — Sync ask and quick-start URL state.
 - Pending — Add ask-request cancellation.
 - Pending — Explain the dashboard full-collection state.

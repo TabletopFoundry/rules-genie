@@ -25,6 +25,7 @@ export function useConversation(sessionId: string, gameId: string) {
   const askAbortControllerRef = useRef<AbortController | null>(null);
   const askTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSubmittedPromptRef = useRef('');
+  const previousScopeRef = useRef({ sessionId: '', gameId: '' });
 
   const clearAskTimeout = useCallback(() => {
     if (askTimeoutRef.current) {
@@ -43,6 +44,21 @@ export function useConversation(sessionId: string, gameId: string) {
     abortPendingAsk();
     setLoading(false);
   }, [abortPendingAsk]);
+
+  useEffect(() => {
+    const previousScope = previousScopeRef.current;
+    const scopeChanged = previousScope.sessionId !== sessionId || previousScope.gameId !== gameId;
+
+    if (!scopeChanged) {
+      return;
+    }
+
+    previousScopeRef.current = { sessionId, gameId };
+    setHistory([]);
+    setSuggestions([]);
+    setErrorState(null);
+    setHydrating(Boolean(gameId));
+  }, [gameId, sessionId]);
 
   const loadConversation = useCallback(async () => {
     if (!gameId) {

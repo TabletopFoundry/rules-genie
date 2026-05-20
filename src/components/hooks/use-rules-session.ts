@@ -45,20 +45,22 @@ function storageRemove(key: string): void {
  * Returns the current sessionId and a function to clear/reset the session.
  */
 export function useRulesSession(gameId: string) {
-  const [sessionId, setSessionId] = useState('');
+  const [sessionState, setSessionState] = useState({ sessionId: '', sessionGameId: '' });
 
   useEffect(() => {
     if (!gameId) {
-      setSessionId('');
+      setSessionState({ sessionId: '', sessionGameId: '' });
       return;
     }
+
+    setSessionState({ sessionId: '', sessionGameId: gameId });
     const storageKey = makeSessionKey(gameId);
     const existing = storageGet(storageKey);
     const nextSessionId = existing ?? createSessionId();
     if (!existing) {
       storageSet(storageKey, nextSessionId);
     }
-    setSessionId(nextSessionId);
+    setSessionState({ sessionId: nextSessionId, sessionGameId: gameId });
   }, [gameId]);
 
   function clearSession() {
@@ -67,8 +69,8 @@ export function useRulesSession(gameId: string) {
     storageRemove(storageKey);
     const newId = createSessionId();
     storageSet(storageKey, newId);
-    setSessionId(newId);
+    setSessionState({ sessionId: newId, sessionGameId: gameId });
   }
 
-  return { sessionId, clearSession };
+  return { ...sessionState, clearSession };
 }
