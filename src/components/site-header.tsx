@@ -30,11 +30,19 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const activeLink = links.find((link) => isActiveLink(pathname, link.href));
+
+  function closeMobileMenu(restoreFocus = false) {
+    setMobileOpen(false);
+    if (restoreFocus) {
+      requestAnimationFrame(() => triggerRef.current?.focus());
+    }
+  }
 
   useEffect(() => {
-    if (mobileOpen && menuRef.current) {
-      const firstLink = menuRef.current.querySelector('a');
-      firstLink?.focus();
+    if (mobileOpen) {
+      closeButtonRef.current?.focus();
     }
   }, [mobileOpen]);
 
@@ -45,8 +53,6 @@ export function SiteHeader() {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Tab' && menuRef.current) {
         const focusable = getFocusableElements(menuRef.current);
-        // Include the close button in the trap
-        if (triggerRef.current) focusable.unshift(triggerRef.current);
         if (focusable.length === 0) return;
 
         const first = focusable[0];
@@ -106,6 +112,7 @@ export function SiteHeader() {
           className="inline-flex items-center justify-center rounded-full p-2 text-slate-600 transition hover:bg-board-mist sm:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
+          aria-controls="mobile-navigation"
         >
           {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -114,41 +121,56 @@ export function SiteHeader() {
       {/* Mobile nav backdrop + drawer */}
       {mobileOpen ? (
         <>
-          <div
-            className="fixed inset-0 z-40 bg-black/30 sm:hidden"
-            aria-hidden="true"
-            onClick={() => setMobileOpen(false)}
-          />
-          <nav
-            ref={menuRef}
-            aria-label="Main navigation"
-            className="relative z-50 border-t border-board-forest/10 bg-white px-4 pb-4 pt-2 sm:hidden"
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                setMobileOpen(false);
-                triggerRef.current?.focus();
-              }
-            }}
-          >
-          <div className="flex flex-col gap-1">
-            {links.map((link) => {
-              const active = isActiveLink(pathname, link.href);
-
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  aria-current={active ? 'page' : undefined}
-                  className={`rounded-2xl px-4 py-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold ${active ? 'bg-board-mist text-board-pine' : 'text-slate-600 hover:bg-board-mist hover:text-board-pine'}`}
+          <div className="fixed inset-0 z-40 bg-black/30 sm:hidden" aria-hidden="true" onClick={() => closeMobileMenu(true)} />
+          <div className="relative z-50 sm:hidden" role="dialog" aria-modal="true" aria-labelledby="mobile-navigation-title">
+            <nav
+              id="mobile-navigation"
+              ref={menuRef}
+              aria-label="Main navigation"
+              className="border-t border-board-forest/10 bg-white px-4 pb-4 pt-2"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  closeMobileMenu(true);
+                }
+              }}
+            >
+              <div className="mb-3 flex items-start justify-between gap-3 rounded-2xl bg-board-canvas px-4 py-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-board-forest">Navigation</p>
+                  <p id="mobile-navigation-title" className="mt-1 text-lg font-bold text-board-pine">
+                    {activeLink?.label ?? 'RulesGenie'}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">Demo user · Jump back into your next rules flow.</p>
+                </div>
+                <button
+                  type="button"
+                  ref={closeButtonRef}
+                  onClick={() => closeMobileMenu(true)}
+                  className="rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-board-pine transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold"
                 >
-                  {link.label}
-                </Link>
-              );
-            })}
-            <span className="mt-1 rounded-2xl bg-board-gold/20 px-4 py-3 text-sm font-semibold text-board-pine">Demo user</span>
+                  Close
+                </button>
+              </div>
+              <div className="flex flex-col gap-1">
+                {links.map((link) => {
+                  const active = isActiveLink(pathname, link.href);
+
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      aria-current={active ? 'page' : undefined}
+                      className={`rounded-2xl px-4 py-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold ${active ? 'bg-board-mist text-board-pine' : 'text-slate-600 hover:bg-board-mist hover:text-board-pine'}`}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+                <span className="mt-1 rounded-2xl bg-board-gold/20 px-4 py-3 text-sm font-semibold text-board-pine">Demo user</span>
+              </div>
+            </nav>
           </div>
-          </nav>
         </>
       ) : null}
     </header>
