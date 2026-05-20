@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 
+import { ActionFeedback } from '@/components/action-feedback';
 import { CitationList } from '@/components/citation-list';
 import { StatusPill } from '@/components/status-pill';
 import { ToggleResponseSchema } from '@/lib/api-schemas';
@@ -20,7 +21,10 @@ export function DashboardClient({
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [selectedGameId, setSelectedGameId] = useState('');
   const [isPending, startTransition] = useTransition();
-  const [mutationError, setMutationError] = useState('');
+  const [mutationFeedback, setMutationFeedback] = useState<{
+    tone: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   const addableGames = useMemo(
     () => games.filter((game) => !snapshot.collection.some((owned) => owned.id === game.id)),
@@ -28,7 +32,7 @@ export function DashboardClient({
   );
 
   async function toggleCollection(gameId: string) {
-    setMutationError('');
+    setMutationFeedback(null);
     try {
       const response = await fetch('/api/collection', {
         method: 'POST',
@@ -51,13 +55,20 @@ export function DashboardClient({
           ? [...current.collection, game].sort((a, b) => a.name.localeCompare(b.name))
           : current.collection.filter((item) => item.id !== gameId)
       }));
+      setMutationFeedback({
+        tone: 'success',
+        message: payload.active ? `${game.name} added to your collection.` : `${game.name} removed from your collection.`
+      });
     } catch (err) {
-      setMutationError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      setMutationFeedback({
+        tone: 'error',
+        message: err instanceof Error ? err.message : 'Something went wrong. Please try again.'
+      });
     }
   }
 
   async function removeBookmark(qaPairId: string) {
-    setMutationError('');
+    setMutationFeedback(null);
     try {
       const response = await fetch('/api/bookmarks', {
         method: 'POST',
@@ -84,27 +95,25 @@ export function DashboardClient({
           item.id === qaPairId ? { ...item, bookmarked: false } : item
         )
       }));
+      setMutationFeedback({
+        tone: 'success',
+        message: 'Bookmark removed from saved answers.'
+      });
     } catch (err) {
-      setMutationError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      setMutationFeedback({
+        tone: 'error',
+        message: err instanceof Error ? err.message : 'Something went wrong. Please try again.'
+      });
     }
   }
 
   return (
     <div className="space-y-8">
-      {mutationError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
-          <div className="flex items-center justify-between gap-3">
-            <p>{mutationError}</p>
-            <button
-              type="button"
-              onClick={() => setMutationError('')}
-              className="text-xs font-semibold text-rose-500 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold rounded"
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <ActionFeedback
+        message={mutationFeedback?.message}
+        tone={mutationFeedback?.tone}
+        onDismiss={() => setMutationFeedback(null)}
+      />
       <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <div className="rounded-[32px] border border-board-forest/10 bg-white p-6 shadow-card">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-board-forest">Mock auth</p>
@@ -224,10 +233,11 @@ export function DashboardClient({
                 <button
                   type="button"
                   aria-label={`Remove ${game.name} from collection`}
+                  disabled={isPending}
                   onClick={() => startTransition(() => toggleCollection(game.id))}
-                  className="rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-board-mist hover:text-board-pine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
+                  className="rounded-full border border-board-forest/15 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-board-mist hover:text-board-pine disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:ring-offset-2"
                 >
-                  Remove
+                  {isPending ? 'Saving…' : 'Remove'}
                 </button>
               </div>
             </div>
@@ -304,10 +314,11 @@ export function DashboardClient({
                     <button
                       type="button"
                       aria-label={`Remove bookmark for: ${item.question.slice(0, 60)}`}
+                      disabled={isPending}
                       onClick={() => startTransition(() => removeBookmark(item.id))}
-                      className="text-xs font-semibold text-slate-500 transition hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:rounded"
+                      className="text-xs font-semibold text-slate-500 transition hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-board-gold focus-visible:rounded"
                     >
-                      Remove
+                      {isPending ? 'Saving…' : 'Remove'}
                     </button>
                   </div>
                   <p className="mt-3 text-sm font-semibold text-board-pine">{item.question}</p>
