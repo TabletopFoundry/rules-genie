@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 
 import { CollectionToggle } from '@/components/collection-toggle';
 import { GameCover } from '@/components/game-cover';
 import { SectionHeading } from '@/components/section-heading';
 import { getCollectionGameIds, getGameById } from '@/lib/db';
+import { getMissingGameRecovery } from '@/lib/ux';
 import { getComplexityLabel } from '@/lib/utils';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -29,7 +29,37 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
   const game = getGameById(id);
 
   if (!game) {
-    notFound();
+    const recovery = getMissingGameRecovery(id);
+
+    return (
+      <div className="grid min-h-[60vh] place-items-center pb-8">
+        <div className="max-w-2xl rounded-[32px] border border-board-forest/10 bg-white px-8 py-10 text-center shadow-card">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-board-forest">{recovery.eyebrow}</p>
+          <h1 className="mt-3 text-3xl font-bold text-board-pine">{recovery.title}</h1>
+          <p className="mt-3 text-sm text-slate-600">{recovery.description}</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/games"
+              className="inline-flex rounded-full bg-board-pine px-5 py-3 text-sm font-semibold text-white transition hover:bg-board-pine/90"
+            >
+              {recovery.browseLabel}
+            </Link>
+            <Link
+              href="/ask"
+              className="inline-flex rounded-full border border-board-forest/15 px-5 py-3 text-sm font-semibold text-board-pine transition hover:bg-board-mist"
+            >
+              {recovery.askLabel}
+            </Link>
+            <Link
+              href="/quick-start"
+              className="inline-flex rounded-full border border-board-forest/15 px-5 py-3 text-sm font-semibold text-board-pine transition hover:bg-board-mist"
+            >
+              {recovery.quickStartLabel}
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const inCollection = getCollectionGameIds().has(game.id);

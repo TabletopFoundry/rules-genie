@@ -9,6 +9,8 @@ import {
   getBookmarkPendingSummary,
   getCollectionPendingSummary,
   getConversationErrorAction,
+  getLoadingRecoveryCopy,
+  getMissingGameRecovery,
   getPreferredAssistantMode,
   resolveRequestedGameId
 } from '../src/lib/ux';
@@ -210,4 +212,23 @@ test('getBookmarkPendingSummary explains saved-answer removal progress', () => {
   assert.equal(getBookmarkPendingSummary(1), 'Removing 1 saved answer…');
   assert.equal(getBookmarkPendingSummary(3), 'Removing 3 saved answers…');
   assert.match(getBookmarkPendingSummary(0), /saved answers stay here/i);
+});
+
+test('getLoadingRecoveryCopy keeps a route-aware retry action visible', () => {
+  const loadingRecovery = getLoadingRecoveryCopy();
+
+  assert.equal(loadingRecovery.retryLabel, 'Try this page again');
+  assert.match(loadingRecovery.retryHint, /refresh the current route/i);
+  assert.match(loadingRecovery.description, /recent rulings/i);
+});
+
+test('getMissingGameRecovery keeps missing detail links inside the core product flows', () => {
+  const namedRecovery = getMissingGameRecovery('ticket-to-ride');
+  const genericRecovery = getMissingGameRecovery();
+
+  assert.match(namedRecovery.title, /ticket-to-ride/i);
+  assert.match(namedRecovery.description, /current catalog/i);
+  assert.equal(namedRecovery.askLabel, 'Open rules assistant');
+  assert.equal(genericRecovery.quickStartLabel, 'Open quick-start');
+  assert.match(genericRecovery.description, /keep the game moving/i);
 });

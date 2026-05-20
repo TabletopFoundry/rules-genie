@@ -74,7 +74,7 @@
 | Add explicit retry actions for conversation history and failed answer requests. | S | `src/components/hooks/use-conversation.ts`, `src/components/conversation-thread.tsx`, `src/components/chat-interface.tsx`, `tests/ux.test.ts` | Done |
 | Stop auto-selecting the first game when a shared ask/quick-start link is stale; require an explicit recovery choice. | S | `src/lib/ux.ts`, `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `tests/ux.test.ts` | Done |
 | Scope dashboard pending states per action so one mutation does not freeze the whole dashboard. | S | `src/components/dashboard-client.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Done |
-| Strengthen route-aware recovery for slow loads and missing game detail pages. | S | `src/app/loading.tsx`, `src/app/games/[id]/page.tsx`, `src/app/games/[id]/not-found.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Planned |
+| Strengthen route-aware recovery for slow loads and missing game detail pages. | S | `src/app/loading.tsx`, `src/app/games/[id]/page.tsx`, `src/app/games/[id]/not-found.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts` | Done |
 
 ## Phase 5 — Priority Stack Rank
 
@@ -93,3 +93,11 @@
 2. Fix stale shared-link selection (`src/lib/ux.ts`, `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`)
 3. Split dashboard pending states (`src/components/dashboard-client.tsx`, `src/lib/ux.ts`)
 4. Strengthen route-aware recovery (`src/app/loading.tsx`, `src/app/games/[id]/page.tsx`, `src/app/games/[id]/not-found.tsx`)
+
+## Implementation Status
+
+- Added explicit retry actions for conversation history and failed answer requests, plus helper coverage for the new recovery copy (`src/components/hooks/use-conversation.ts`, `src/components/conversation-thread.tsx`, `src/components/chat-interface.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts`).
+- Stopped stale ask and quick-start links from silently defaulting to the first catalog title by requiring an explicit supported-game pick (`src/lib/ux.ts`, `src/components/chat-interface.tsx`, `src/components/quick-start-explorer.tsx`, `src/components/hooks/use-rules-session.ts`, `tests/ux.test.ts`).
+- Scoped dashboard pending states per action so add/remove flows no longer freeze unrelated controls (`src/components/dashboard-client.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts`).
+- Added a route-aware refresh action to the global loading screen and contextual missing-game recovery paths that keep users inside the main ask/library/quick-start flows (`src/components/refresh-page-button.tsx`, `src/app/loading.tsx`, `src/app/games/[id]/page.tsx`, `src/app/games/[id]/not-found.tsx`, `src/lib/ux.ts`, `tests/ux.test.ts`).
+- Final validation passed: `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build`.

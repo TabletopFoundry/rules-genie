@@ -111,6 +111,30 @@ export function getBookmarkPendingSummary(removingCount = 0) {
   return 'Saved answers stay here until you remove them.';
 }
 
+export function getLoadingRecoveryCopy() {
+  return {
+    title: 'Setting the table…',
+    description: 'RulesGenie is gathering your games, recent rulings, and quick-start notes.',
+    retryLabel: 'Try this page again',
+    retryHint: 'If this page feels stuck, refresh the current route before jumping to another part of the catalog.'
+  };
+}
+
+export function getMissingGameRecovery(requestedGameId?: string) {
+  const trimmedId = requestedGameId?.trim();
+
+  return {
+    eyebrow: 'Game detail unavailable',
+    title: trimmedId ? `We could not find “${trimmedId}”.` : 'That game card is missing.',
+    description: trimmedId
+      ? `The shared link for “${trimmedId}” no longer matches the current catalog. Pick another supported title or jump back into the assistant.`
+      : 'Pick another supported title or jump straight into the assistant to keep the game moving.',
+    browseLabel: 'Browse supported games',
+    askLabel: 'Open rules assistant',
+    quickStartLabel: 'Open quick-start'
+  };
+}
+
 export function filterGames(games: GameRecord[], filters: LibraryFilters) {
   const normalizedSearch = filters.search.trim().toLowerCase();
 
