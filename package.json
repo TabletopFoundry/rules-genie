@@ -42,6 +42,7 @@
     "clean": "rm -rf .next tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@tabletopfoundry/catalog": "file:../packages/catalog",
     "better-sqlite3": "^12.1.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.511.0",
